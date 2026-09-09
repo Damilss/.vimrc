@@ -1,5 +1,4 @@
 " ~/.vimrc
-" VS Code-like palette sampled from the supplied screenshot.
 
 " ---------- Core editing ----------
 filetype plugin indent on
