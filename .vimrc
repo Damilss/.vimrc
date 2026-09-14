@@ -190,6 +190,38 @@ call s:VSLink('VSVariable', 'shVariable shSetList shShellVariables shDeref shDer
 call s:VSLink('VSNumber', 'shNumber')
 call s:VSLink('VSPunctuation', 'shOperator shDerefOp shDerefDelim shRedir shSetListDelim shSubShRegion shExprRegion shBracketExprDelim')
 
+" YAML (.yml and .yaml).  Vim leaves plain and block scalars unlinked by
+" default; VS Code scopes both as strings, so color them green here too.
+call s:VSLink('VSComment', 'yamlComment yamlTodo')
+call s:VSLink('VSKeyword', 'yamlMappingKey yamlFlowMappingKey yamlBlockMappingKey yamlBlockScalarHeader yamlAnchor yamlAlias')
+call s:VSLink('VSStorage', 'yamlDirectiveName yamlTAGDirective yamlYAMLDirective')
+call s:VSLink('VSString', 'yamlString yamlFlowString yamlFlowStringDelimiter yamlPlainScalar yamlBlockString')
+call s:VSLink('VSConstant', 'yamlConstant yamlNull yamlBool yamlEscape yamlSingleEscape')
+call s:VSLink('VSNumber', 'yamlInteger yamlFloat yamlTimestamp yamlYAMLVersion VscYamlBlockScalarIndent')
+call s:VSLink('VSType', 'yamlNodeTag yamlTagHandle yamlTagPrefix VscYamlAnchorName')
+call s:VSLink('VSVariable', 'VscYamlAliasName')
+call s:VSLink('VSPunctuation', 'yamlDirective yamlMappingKeyStart yamlMappingMerge yamlKeyValueDelimiter yamlFlowIndicator yamlFlowMappingKeyStart yamlFlowMappingMerge yamlFlowMappingDelimiter yamlBlockMappingKeyStart yamlBlockMappingMerge yamlBlockMappingDelimiter yamlBlockCollectionItemStart VscYamlAnchorDelimiter VscYamlAliasDelimiter')
+call s:VSLink('VSSource', 'yamlDocumentStart yamlDocumentEnd yamlReservedDirective')
+
+function! s:VscYamlSyntax() abort
+  " Match VS Code's nested scopes for &anchors and *aliases: purple sigils,
+  " purple anchor names, and pink alias names.
+  syntax match VscYamlAnchorDelimiter /&/ contained containedin=yamlAnchor
+  syntax match VscYamlAnchorName /\%(&\)\@<=[^[:space:]\[\]{},]\+/ contained containedin=yamlAnchor
+  syntax match VscYamlAliasDelimiter /\*/ contained containedin=yamlAlias
+  syntax match VscYamlAliasName /\%(\*\)\@<=[^[:space:]\[\]{},]\+/ contained containedin=yamlAlias
+
+  " VS Code treats a block scalar's indentation digit as numeric while the
+  " |/> marker and +/- chomping indicator remain keyword-colored.
+  syntax match VscYamlBlockScalarIndent /[1-9]/ contained containedin=yamlBlockScalarHeader
+endfunction
+
+augroup amoled_black_shiny_yaml
+  autocmd!
+  autocmd BufRead,BufNewFile *.yml,*.yaml setfiletype yaml
+  autocmd FileType yaml call <SID>VscYamlSyntax()
+augroup END
+
 " Markdown.  These correspond directly to the theme's markup.* scopes.
 call s:VSLink('VSMarkdownHeading', 'markdownH1 markdownH2 markdownH3 markdownH4 markdownH5 markdownH6 markdownHeadingRule markdownHeadingDelimiter markdownH1Delimiter markdownH2Delimiter markdownH3Delimiter markdownH4Delimiter markdownH5Delimiter markdownH6Delimiter')
 call s:VSLink('VSMarkdownLink', 'markdownUrl markdownAutomaticLink htmlLink')
