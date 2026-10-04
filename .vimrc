@@ -10,7 +10,7 @@
 "   let g:amoled_black_shiny_pink_normal = 0
 
 " ---------- Core editing ----------
-
+filetype plugin indent on
 
 set background=dark
 set number
@@ -21,7 +21,7 @@ if exists('+termguicolors')
 endif
 
 " Alt-Backspace deletes the previous word in Insert mode for macOS
-" Control-Backspace deletes previous word in Inser mode for linux/win
+" Control-Backspace deletes previous word in Inser mode for linux (debian)
 inoremap <M-BS> <C-W>
 inoremap <C-H> <C-W>
 
