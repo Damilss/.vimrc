@@ -10,7 +10,7 @@
 "   let g:amoled_black_shiny_pink_normal = 0
 
 " ---------- Core editing ----------
-filetype plugin indent on
+
 
 set background=dark
 set number
@@ -20,8 +20,10 @@ if exists('+termguicolors')
   set termguicolors
 endif
 
-" Alt-Backspace deletes the previous word in Insert mode.
+" Alt-Backspace deletes the previous word in Insert mode for macOS
+" Control-Backspace deletes previous word in Inser mode for linux/win
 inoremap <M-BS> <C-W>
+inoremap <C-H> <C-W>
 
 " Ask Vim's built-in syntax files for richer highlighting.
 let g:java_highlight_all = 1
