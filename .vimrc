@@ -95,9 +95,9 @@ highlight DiffChange guifg=#FBCC43 guibg=#0E0E0E gui=NONE ctermfg=221 ctermbg=23
 highlight DiffText   guifg=#FFFFFF guibg=#343434 gui=bold ctermfg=15  ctermbg=236 cterm=bold
 
 " ---------- Exact syntax palette ----------
-" The theme's comment is #6160A4AA.  #454572 is its opaque appearance over
-" the editor's #0E0E0E background.
-highlight VSComment     guifg=#454572 guibg=NONE gui=italic ctermfg=60  ctermbg=NONE cterm=italic
+" The theme's comment is #6160A4AA (opaque #454572 over #0E0E0E), which is
+" too dim to read.  Same indigo hue, lifted to ~5:1 contrast on #0E0E0E.
+highlight VSComment     guifg=#7F7EC0 guibg=NONE gui=italic ctermfg=103 ctermbg=NONE cterm=italic
 highlight VSKeyword     guifg=#FFB638 guibg=NONE gui=NONE   ctermfg=215 ctermbg=NONE cterm=NONE
 highlight VSVariable    guifg=#FF478D guibg=NONE gui=NONE   ctermfg=204 ctermbg=NONE cterm=NONE
 highlight VSFunction    guifg=#28A9FF guibg=NONE gui=NONE   ctermfg=39  ctermbg=NONE cterm=NONE
