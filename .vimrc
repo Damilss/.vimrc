@@ -141,9 +141,10 @@ highlight Cursor       guifg=#0E0E0E guibg=#FFFFFF gui=NONE ctermfg=233 ctermbg=
 highlight CursorLine   guifg=NONE    guibg=#343434 gui=NONE ctermfg=NONE ctermbg=236 cterm=NONE
 highlight CursorColumn guifg=NONE    guibg=#242424 gui=NONE ctermfg=NONE ctermbg=235 cterm=NONE
 " The theme's line numbers (#343434, 1.5:1 on #0E0E0E) vanish on dimmer
-" screens.  Same gray, lifted to ~3.7:1; the current line's number to ~6.5:1.
-highlight LineNr       guifg=#6C6C6C guibg=#0E0E0E gui=NONE ctermfg=242 ctermbg=233 cterm=NONE
-highlight CursorLineNr guifg=#BCBCBC guibg=#343434 gui=bold ctermfg=250 ctermbg=236 cterm=bold
+" screens such as a Raspberry Pi monitor.  Same gray, lifted to ~7:1; the
+" current line's number uses the theme's #EEEEEE source color (~11:1).
+highlight LineNr       guifg=#9E9E9E guibg=#0E0E0E gui=NONE ctermfg=247 ctermbg=233 cterm=NONE
+highlight CursorLineNr guifg=#EEEEEE guibg=#343434 gui=bold ctermfg=255 ctermbg=236 cterm=bold
 highlight SignColumn   guifg=#6160A4 guibg=#0E0E0E gui=NONE ctermfg=61  ctermbg=233 cterm=NONE
 highlight FoldColumn   guifg=#6160A4 guibg=#0E0E0E gui=NONE ctermfg=61  ctermbg=233 cterm=NONE
 highlight Folded       guifg=#999999 guibg=#0E0E0E gui=italic ctermfg=246 ctermbg=233 cterm=italic
