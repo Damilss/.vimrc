@@ -1,0 +1,14 @@
+# macOS Finder metadata
+.DS_Store
+
+# Generated clang tooling files (contain machine-specific absolute paths)
+compile_commands.json
+.cache/
+build/
+
+# Example build output
+examples/c/squares
+examples/c/*.o
+
+# tests/smoke.vim output when run without scripts/smoke-test.sh
+smoke-results.txt

@@ -3,7 +3,10 @@
 " ~/.vscode/extensions/rendinjast.amoled-black-0.1.0/
 "   themes/amoled-dark-shiny-color-theme.json
 "
-" This is a complete, plugin-free vimrc.  Ordinary identifiers are left pink
+" The theme and editing settings need no plugins.  The optional ALE and
+" auto-pairs plugins (see the Plugins section and README.md) add language
+" server diagnostics, completion, and bracket pairing; without them installed
+" the rest of this file works unchanged.  Ordinary identifiers are left pink
 " by default because Vim's regex syntax engine does not classify every local
 " variable the way VS Code's semantic highlighter does.  Set the following to
 " 0 before sourcing this file if you prefer the theme's #EEEEEE source fallback:
@@ -41,6 +44,83 @@ if !exists('g:markdown_fenced_languages')
         \ 'bash=sh', 'shell=sh', 'zsh=sh',
         \ 'asm', 'assembly=asm', 'riscv=asm', 'arm=asm', 'aarch64=asm'
         \ ]
+endif
+
+" ---------- Plugins ----------
+" vim-plug loads two plugins from ~/.vim/plugged:
+"   ALE         diagnostics, completion, and navigation via language servers
+"   auto-pairs  matching (), [], {}, quotes; skip/delete/Enter inside pairs
+" Install them with scripts/install.sh.  If ~/.vim/autoload/plug.vim is
+" missing, this section does nothing and ordinary editing is unaffected.
+let s:repo_dir = fnamemodify(resolve(expand('<sfile>:p')), ':h')
+
+" ALE reads these when it loads, so they must be set before plug#end().
+let g:ale_completion_enabled = 1
+" Only the linters listed here run; other filetypes are left alone.
+let g:ale_linters_explicit = 1
+let g:ale_linters = extend(get(g:, 'ale_linters', {}), {
+      \ 'c': ['clangd'],
+      \ 'cpp': ['clangd'],
+      \ 'sh': ['shellcheck'],
+      \ 'python': ['ruff', 'pyright'],
+      \ 'java': ['javac'],
+      \ }, 'keep')
+" Check while typing (after a short pause), on leaving Insert mode, and on
+" save.  Nothing is fixed or reformatted automatically.
+let g:ale_lint_on_text_changed = 'always'
+let g:ale_lint_on_insert_leave = 1
+let g:ale_lint_on_save = 1
+let g:ale_fix_on_save = 0
+let g:ale_sign_column_always = 1
+let g:ale_echo_msg_format = '[%linter%] %severity%: %s'
+let g:ale_virtualtext_cursor = 'current'
+" :ALEHover and :ALEDetail open a popup instead of the message line.
+let g:ale_floating_preview = 1
+
+" clangd: an explicit g:ale_c_clangd_executable / g:ale_cpp_clangd_executable
+" wins; then PATH (Xcode's /usr/bin/clangd on macOS, apt's clangd on Debian);
+" then Homebrew LLVM, which is keg-only and so not on PATH.  Brew is asked at
+" most once per Vim session.
+function! s:FindClangd() abort
+  if executable('clangd')
+    return 'clangd'
+  endif
+  if has('mac') && executable('brew')
+    let l:prefix = trim(system('brew --prefix llvm 2>/dev/null'))
+    if v:shell_error == 0 && executable(l:prefix . '/bin/clangd')
+      return l:prefix . '/bin/clangd'
+    endif
+  endif
+  return ''
+endfunction
+
+if !exists('s:clangd')
+  let s:clangd = s:FindClangd()
+endif
+if !empty(s:clangd)
+  let g:ale_c_clangd_executable = get(g:, 'ale_c_clangd_executable', s:clangd)
+  let g:ale_cpp_clangd_executable = get(g:, 'ale_cpp_clangd_executable', s:clangd)
+endif
+
+" auto-pairs: keep pair insertion, skipping, Backspace, and Enter, but not
+" the extra keys it would take over in terminal Vim:
+"   <C-h> is the Ctrl-Backspace mapping above.
+"   Meta keys arrive as 8-bit characters (<M-e> is 'å', <M-)> is '©'), so its
+"   Meta shortcuts would swallow those characters while typing.
+let g:AutoPairsMapCh = 0
+let g:AutoPairsShortcutToggle = ''
+let g:AutoPairsShortcutFastWrap = ''
+let g:AutoPairsShortcutJump = ''
+let g:AutoPairsShortcutBackInsert = ''
+let g:AutoPairsMoveCharacter = ''
+" Typing a closer skips only an existing closer on the same line.
+let g:AutoPairsMultilineClose = 0
+
+if !empty(globpath(&runtimepath, 'autoload/plug.vim'))
+  call plug#begin('~/.vim/plugged')
+  Plug 'dense-analysis/ale', { 'tag': 'v4.0.0' }
+  Plug 'jiangmiao/auto-pairs', { 'commit': '39f06b873a8449af8ff6a3eee716d3da14d63a76' }
+  call plug#end()
 endif
 
 " ---------- Reset inherited colors ----------
@@ -350,3 +430,79 @@ highlight DiagnosticInfo  guifg=#6CC7F6 guibg=NONE gui=NONE ctermfg=81  ctermbg=
 highlight DiagnosticHint  guifg=#5BC266 guibg=NONE gui=NONE ctermfg=71  ctermbg=NONE cterm=NONE
 highlight DiagnosticUnderlineError guifg=NONE guibg=NONE gui=undercurl guisp=#E1270E cterm=underline
 highlight DiagnosticUnderlineWarn  guifg=NONE guibg=NONE gui=undercurl guisp=#FF453A cterm=underline
+highlight DiagnosticUnderlineInfo  guifg=NONE guibg=NONE gui=undercurl guisp=#6CC7F6 cterm=underline
+
+" ALE only sets its own defaults for groups that do not exist yet, so these
+" links win, and re-sourcing this file restores them after `highlight clear`.
+call s:VSLink('DiagnosticUnderlineError', 'ALEError ALEStyleError')
+call s:VSLink('DiagnosticUnderlineWarn',  'ALEWarning ALEStyleWarning')
+call s:VSLink('DiagnosticUnderlineInfo',  'ALEInfo')
+call s:VSLink('DiagnosticError', 'ALEErrorSign ALEStyleErrorSign ALEVirtualTextError ALEVirtualTextStyleError')
+call s:VSLink('DiagnosticWarn',  'ALEWarningSign ALEStyleWarningSign ALEVirtualTextWarning ALEVirtualTextStyleWarning')
+call s:VSLink('DiagnosticInfo',  'ALEInfoSign ALEVirtualTextInfo')
+
+" ---------- Completion and language-server mappings ----------
+" Tab / Shift-Tab move through an open completion menu and otherwise insert
+" their usual characters.  Ctrl-Y accepts the selected item; Enter is left to
+" newline and auto-pairs' brace expansion.
+inoremap <expr> <Tab>   pumvisible() ? "\<C-n>" : "\<Tab>"
+inoremap <expr> <S-Tab> pumvisible() ? "\<C-p>" : "\<S-Tab>"
+
+" Buffer-local, so gd, gr, and K keep Vim's meaning everywhere else.
+function! s:AleLspMaps() abort
+  if exists(':ALEHover') != 2
+    return
+  endif
+  if &filetype ==# 'python' && !executable('pyright-langserver')
+    return
+  endif
+  nnoremap <buffer> <silent> gd :ALEGoToDefinition<CR>
+  nnoremap <buffer> <silent> gr :ALEFindReferences<CR>
+  nnoremap <buffer> <silent> K  :ALEHover<CR>
+  " Completion menu is shown but nothing is inserted or selected until
+  " Tab / Ctrl-N, so typing and Enter are never hijacked.
+  setlocal completeopt=menuone,noinsert,noselect
+  if has('popupwin')
+    setlocal completeopt+=popup
+  endif
+endfunction
+
+function! s:AleDiagnosticMaps() abort
+  if exists(':ALENextWrap') != 2
+    return
+  endif
+  nnoremap <buffer> <silent> ]e :ALENextWrap<CR>
+  nnoremap <buffer> <silent> [e :ALEPreviousWrap<CR>
+endfunction
+
+" Once per session, say why a C/C++ buffer has no diagnostics.
+function! s:CHint() abort
+  if exists('s:c_hint_shown')
+    return
+  endif
+  let l:missing = []
+  if exists(':ALEInfo') != 2
+    call add(l:missing, 'ALE plugin')
+  endif
+  if !executable(get(g:, 'ale_c_clangd_executable', 'clangd'))
+    call add(l:missing, 'clangd')
+  endif
+  if empty(l:missing)
+    return
+  endif
+  let s:c_hint_shown = 1
+  echohl WarningMsg
+  echomsg 'vimrc: no C/C++ diagnostics (missing ' . join(l:missing, ', ')
+        \ . '). Run: ' . fnameescape(s:repo_dir . '/scripts/doctor.sh')
+  echohl None
+endfunction
+
+augroup vimrc_ale
+  autocmd!
+  autocmd FileType c,cpp,python call s:AleLspMaps()
+  autocmd FileType c,cpp,sh,python,java call s:AleDiagnosticMaps()
+  autocmd FileType c,cpp call s:CHint()
+  " ALE has no per-buffer lint-on-change switch; javac is slow, so wait for
+  " a longer pause before checking Java.
+  autocmd FileType java let b:ale_lint_delay = 1500
+augroup END
