@@ -112,6 +112,93 @@ endfunction
 let g:ale_root = extend(get(g:, 'ale_root', {}),
       \ {'clangd': function('s:ClangdRoot')}, 'keep')
 
+" clangd reports only the first missing header in the #include block at the
+" top of a file: clang treats a missing header as fatal and reports nothing
+" more in that pass.  After clangd's results arrive, ask it which includes it
+" resolved and mark every other one, as VS Code does.  Includes inside #if
+" blocks are left alone: an inactive include looks the same as a missing one.
+let s:showing_includes = 0
+
+" {lnum: [col, end_col, name]} for each #include outside #if blocks.  An
+" include guard (#ifndef X, then #define X) doesn't count as a block.
+function! s:IncludeLines(buffer) abort
+  let l:lines = getbufline(a:buffer, 1, '$')
+  let l:blocks = []
+  let l:includes = {}
+  for l:lnum in range(1, len(l:lines))
+    let l:line = l:lines[l:lnum - 1]
+    if l:line !~# '^\s*#'
+      continue
+    elseif l:line =~# '^\s*#\s*if\(n\=def\)\=\>'
+      let l:guard = matchstr(l:line, '^\s*#\s*ifndef\s\+\zs\w\+')
+      call add(l:blocks, empty(l:blocks) && !empty(l:guard)
+            \ && get(l:lines, l:lnum, '') =~# '^\s*#\s*define\s\+' . l:guard . '\>'
+            \ ? 'guard' : 'if')
+    elseif l:line =~# '^\s*#\s*endif\>'
+      if !empty(l:blocks)
+        call remove(l:blocks, -1)
+      endif
+    elseif index(l:blocks, 'if') < 0 && l:line =~# '^\s*#\s*include\s*[<"]'
+      let l:col = match(l:line, '[<"]') + 1
+      let l:name = matchstr(l:line, '[^>"]*', l:col)
+      let l:includes[l:lnum] = [l:col, l:col + len(l:name) + 1, l:name]
+    endif
+  endfor
+  return l:includes
+endfunction
+
+function! s:ShowIncludes(buffer, tick, response) abort
+  if !bufexists(a:buffer) || getbufvar(a:buffer, 'changedtick') != a:tick
+        \ || type(get(a:response, 'result')) != v:t_list
+    return
+  endif
+  " Lines whose include clangd resolved, or already reported itself.
+  let l:skip = {}
+  for l:link in a:response.result
+    let l:skip[l:link.range.start.line + 1] = 1
+  endfor
+  for l:item in ale#engine#GetLoclist(a:buffer)
+    if l:item.linter_name is# 'clangd' && (get(l:item, 'code', '') is# 'pp_file_not_found'
+          \ || l:item.text =~# 'file not found')
+      let l:skip[l:item.lnum] = 1
+    endif
+  endfor
+  let l:loclist = []
+  for [l:lnum, l:include] in items(s:IncludeLines(a:buffer))
+    if !has_key(l:skip, l:lnum)
+      call add(l:loclist, {'lnum': str2nr(l:lnum), 'col': l:include[0],
+            \ 'end_col': l:include[1], 'type': 'E',
+            \ 'text': printf("'%s' file not found", l:include[2])})
+    endif
+  endfor
+  " Showing results fires ALELintPost again; don't ask clangd a second time.
+  let s:showing_includes = 1
+  try
+    call ale#other_source#ShowResults(a:buffer, 'includes', l:loclist)
+  finally
+    let s:showing_includes = 0
+  endtry
+endfunction
+
+function! s:CheckIncludes(buffer) abort
+  if s:showing_includes || getbufvar(a:buffer, '&filetype') !~# '^c\(pp\)\=$'
+    return
+  endif
+  try
+    call ale#lsp_linter#SendRequest(a:buffer, 'clangd',
+          \ [0, 'textDocument/documentLink',
+          \  {'textDocument': {'uri': ale#util#ToURI(expand('#' . a:buffer . ':p'))}}],
+          \ function('s:ShowIncludes', [a:buffer, getbufvar(a:buffer, 'changedtick')]))
+  catch
+    " clangd isn't a linter for this buffer.
+  endtry
+endfunction
+
+augroup vimrc_clangd_includes
+  autocmd!
+  autocmd User ALELintPost call s:CheckIncludes(bufnr(''))
+augroup END
+
 " auto-pairs: keep pair insertion, skipping, Backspace, and Enter, but not
 " the extra keys it would take over in terminal Vim:
 "   <C-h> is the Ctrl-Backspace mapping above.

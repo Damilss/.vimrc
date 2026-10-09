@@ -127,6 +127,19 @@ call s:Add('undo clears the error',
       \ {-> [!&modified && empty(filter(copy(s:Loclist()), 'v:val.type ==# "E"')),
       \      'loclist: ' . string(s:Loclist())]},
       \ {-> s:Idle() && !&modified && empty(filter(copy(s:Loclist()), 'v:val.type ==# "E"'))}, 10000)
+" clangd reports only the first missing header; the vimrc marks the rest,
+" except inside #if blocks.  'n': auto-pairs would double the quotes.
+call s:Add('every missing #include is reported, not just the first',
+      \ {-> feedkeys("ggO#include \"nope1.h\"\<CR>#include \"nope2.h\"\<CR>"
+      \      . "#if 0\<CR>#include \"nope3.h\"\<CR>#endif\<Esc>", 'nt')},
+      \ {-> [!empty(s:ErrorsOn(1)) && !empty(s:ErrorsOn(2)) && empty(s:ErrorsOn(4)),
+      \      'loclist: ' . string(s:Loclist())]},
+      \ {-> s:Idle() && !empty(s:ErrorsOn(1)) && !empty(s:ErrorsOn(2))}, 30000)
+call s:Add('undo clears the missing #include errors',
+      \ {-> feedkeys('u', 't')},
+      \ {-> [!&modified && empty(filter(copy(s:Loclist()), 'v:val.type ==# "E"')),
+      \      'loclist: ' . string(s:Loclist())]},
+      \ {-> s:Idle() && !&modified && empty(filter(copy(s:Loclist()), 'v:val.type ==# "E"'))}, 10000)
 
 " ---------- Completion ----------
 function! s:CompletionWords() abort
