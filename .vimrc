@@ -102,6 +102,16 @@ if !empty(s:clangd)
   let g:ale_cpp_clangd_executable = get(g:, 'ale_cpp_clangd_executable', s:clangd)
 endif
 
+" ALE only starts clangd once it finds a project root (compile_commands.json,
+" .git, Makefile, CMakeLists.txt, configure).  Without one it silently shows
+" nothing, so fall back to the file's own directory.
+function! s:ClangdRoot(buffer) abort
+  let l:root = ale#c#FindProjectRoot(a:buffer)
+  return empty(l:root) ? fnamemodify(bufname(a:buffer), ':p:h') : l:root
+endfunction
+let g:ale_root = extend(get(g:, 'ale_root', {}),
+      \ {'clangd': function('s:ClangdRoot')}, 'keep')
+
 " auto-pairs: keep pair insertion, skipping, Backspace, and Enter, but not
 " the extra keys it would take over in terminal Vim:
 "   <C-h> is the Ctrl-Backspace mapping above.
