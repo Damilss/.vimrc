@@ -1,6 +1,6 @@
 # Implementation status
 
-The original requirements are in [CLAUDE_HANDOFF.md](../CLAUDE_HANDOFF.md). This page records what was actually done and how it was checked. Last updated 2026-10-06.
+The original requirements are in [CLAUDE_HANDOFF.md](../CLAUDE_HANDOFF.md). This page records what was actually done and how it was checked. Last updated 2026-10-07 (grammar checking, at the end of this page).
 
 ## Decisions that differ from the handoff
 
@@ -81,3 +81,44 @@ Nothing has been run on Debian.
 | `doctor.sh` on Debian | **pending** |
 | `smoke-test.sh` on Debian (util-linux `script -qec` branch untested) | **pending** |
 | Interactive checks above, on Debian | **pending** |
+
+## 2026-10-07: grammar checking (Markdown, text, git commits)
+
+Added after the original handoff, at Emilio's request: spelling and grammar underlines from a local model.
+
+### Decisions
+
+| Choice | Why |
+| --- | --- |
+| Local model through Ollama, `qwen3.5:9b` | Benchmarked on this Mac against Vim's `spell` (3 of 10 planted mistakes), `qwen3.5:4b` (rewrote whole lines, nothing precise to underline), and `gemma4:12b` (41 s per paragraph). The 9B model found 9 of 10 with exact spans in 1 to 4 s per paragraph |
+| An ALE linter plus `scripts/grammar_check.py`, no new plugin | Reuses ALE's pause timing, job cancellation, undercurls, signs, `]e`/`[e`, and `:ALEDetail`. Python standard library only, Python 3.9 compatible (macOS ships 3.9.6) |
+| One paragraph per request: the cursor's, then the ones on screen | Sending a whole 30-line file found only 10 of 60 mistakes and took 13.5 s. Per paragraph is accurate, and progress shows sooner. Text off screen is never sent (Emilio's choice, to limit battery use) |
+| Cache by paragraph text in `~/.cache/vimrc-grammar` | Unchanged paragraphs keep their underlines without asking again. Writes are atomic (temp file + rename), so a killed check leaves no partial entry |
+| `exec` in the linter command | ALE's stop signal then reaches Python, the connection closes, and Ollama stops generating. Measured: a new check waited 22 s behind an uncancelled one and 0.5 s after a cancelled one |
+| One worked example in the prompt | Without it the model split "works good" into wrong fixes ("work well"). With it, every fix in that test sentence was correct |
+| Spelling = error, grammar/punctuation = warning | Both use the existing red undercurls (`DiagnosticUnderlineError`/`Warn`) |
+| `z=` applies the fix; elsewhere it stays Vim's `z=` | Emilio keeps `spell` off and turns it on by hand with `:setlocal spell` |
+| `~/.vimrc` replaced by a regular-file copy of `5b864e1` before any change | Emilio's request: the live config stays as it was until they have reviewed this work. `doctor.sh` therefore shows `[FAIL] ~/.vimrc ... not linked`; `scripts/install.sh` restores the link (backing up the copy) |
+
+### Validation on macOS (2026-10-07)
+
+Ollama 0.40.0, `qwen3.5:9b`, Vim 9.1, ALE v4.0.0. All runs used the repo vimrc via `vim -Nu`; `~/.vimrc` was verified unchanged (sha256 `aea4d7d5...`) before and after.
+
+| # | Check | Result |
+| --- | --- | --- |
+| 1 | `python3 -I tests/test_grammar_check.py` (fake Ollama) | 23/23 pass: paragraph splitting (fences, front matter, tables, comments, git comments and scissors, 40-line cap), UTF-8 byte columns, whole-word matching, neighbor-line fallback, repeated mistakes, dropping unfound/no-op/code/URL spans, word at the cursor while typing, one request per run with cursor first, off-screen text not sent, cache hit, moved paragraph, model change, request shape, unreachable host, missing model, bad reply, atomic cache writes, host normalization |
+| 2 | `scripts/smoke-test.sh` | **40/40 pass**: the 32 earlier steps, plus Markdown buffer gets the `grammar` linter, 1 s delay, `z=` and `]e`; a typed misspelling is underlined at the right columns as an error; `z=` fixes it; `u` restores it; `z=` away from an issue changes nothing; fenced code not checked; git commit `#` lines not checked; text buffers get the linter; re-sourcing does not duplicate the `vimrc_grammar` autocmds |
+| 3 | `shellcheck -x scripts/*.sh`, `bash -n` (Bash 3.2), `py_compile` | pass |
+| 4 | Real model in real Vim, 14-line Markdown note with a code block, inline code, and a URL | 13 issues, correct columns; nothing flagged in code or URLs; first underlines after 13 s (a paragraph with 9 mistakes), all done at 20 s |
+| 5 | Real model, `COMMIT_EDITMSG` with typos from this repo's history | `brigthen`, `accidently`, `ajdust` flagged; `commment` missed; comment lines ignored |
+| 6 | Cancellation: type a new paragraph while a long check runs | New paragraph underlined 3.7 s after typing (including the 1 s pause); never more than one helper process; none left after exit |
+| 7 | `scripts/doctor.sh` | Grammar section lists python3, Ollama 0.40.0, and the model as `[opt]`; with `OLLAMA_HOST=127.0.0.1:9` it reports "not reachable" with the fix |
+
+### Not verified / manual checks for you
+
+- [ ] Review the diff, then re-link: `scripts/install.sh` (backs up the current `~/.vimrc` copy and restores the symlink).
+- [ ] In Ghostty, the grammar undercurls and the current-line message are readable and not distracting.
+- [ ] The 1 s pause feels right while writing (`g:vimrc_grammar_delay`).
+- [ ] Battery and fan over a long writing session on battery.
+- [ ] A real `git commit` opens Vim with underlines in the message.
+- [ ] Debian/Pi: untested. See [setup-debian.md](setup-debian.md#grammar-checking-optional-not-yet-tested-on-debian).

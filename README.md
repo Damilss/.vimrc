@@ -5,11 +5,12 @@ Personal configuration for terminal Vim on macOS and Debian 13 (trixie). It incl
 - the AMOLED Black Shiny color theme,
 - extra syntax colors for several languages,
 - language-server C/C++ diagnostics and completion (ALE + clangd),
-- automatic closing of quotes and brackets (auto-pairs).
+- automatic closing of quotes and brackets (auto-pairs),
+- spelling and grammar underlines in Markdown, text, and git commit messages from a local model (optional; Ollama).
 
 Repository: <https://github.com/damilss/.vimrc>
 
-Everything lives in one tracked file, [`.vimrc`](.vimrc). `~/.vimrc` is a symlink to it. The plugins are optional. Without them, Vim starts normally with the theme and settings below.
+Everything lives in one tracked file, [`.vimrc`](.vimrc), apart from the grammar-check helper it runs from `scripts/`. `~/.vimrc` is a symlink to it. The plugins are optional. Without them, Vim starts normally with the theme and settings below.
 
 ## What is in the vimrc
 
@@ -36,6 +37,7 @@ Everything lives in one tracked file, [`.vimrc`](.vimrc). `~/.vimrc` is a symlin
 | [ALE](https://github.com/dense-analysis/ale) v4.0.0 | Runs language servers and linters asynchronously. Shows signs, underlines, the current line's message, and the location list. Provides completion, go-to-definition, references, and hover |
 | [auto-pairs](https://github.com/jiangmiao/auto-pairs) (2019 master, pinned) | Pairs `()`, `[]`, `{}`, `""`, `''`. Skips over closers, deletes empty pairs, and expands `{}` on Enter. Unmaintained since 2019, but it works with Vim 9.1 (tested) |
 | clangd | C/C++ analysis. On macOS this is Xcode's `/usr/bin/clangd`; on Debian, apt's `clangd` |
+| [Ollama](https://ollama.com) + `qwen3.5:9b` (optional) | Local model for spelling and grammar. `scripts/grammar_check.py` (Python 3, standard library only) connects it to ALE. See [Grammar checking](#grammar-checking) |
 
 ALE only runs the linters listed in the vimrc (`g:ale_linters_explicit = 1`). A linter that isn't installed is skipped silently.
 
@@ -45,6 +47,7 @@ ALE only runs the linters listed in the vimrc (`g:ale_linters_explicit = 1`). A 
 | sh/bash | shellcheck | no |
 | Python | ruff, plus pyright if installed | only with pyright |
 | Java | javac (waits 1.5 s after typing stops) | no |
+| Markdown, text, git commit | grammar: local model via Ollama (waits 1 s after typing stops) | no; `z=` applies a fix |
 
 All other filetypes behave exactly as they did before. Nothing reformats or "fixes" files automatically.
 
@@ -59,7 +62,8 @@ The full list, with displaced defaults, is in [docs/keybindings.md](docs/keybind
 | Normal | `gd` | Go to definition | C/C++ (and Python with pyright) |
 | Normal | `gr` | Find references | same |
 | Normal | `K` | Hover: type/docs popup | same |
-| Normal | `]e` / `[e` | Next / previous diagnostic (wraps) | C/C++, sh, Python, Java |
+| Normal | `]e` / `[e` | Next / previous diagnostic (wraps) | C/C++, sh, Python, Java, Markdown, text, git commit |
+| Normal | `z=` | Apply the grammar fix under the cursor (`u` undoes it). Elsewhere, Vim's spelling suggestions | Markdown, text, git commit |
 | Insert, menu open | `Tab` / `Shift-Tab` | Next / previous suggestion | everywhere |
 | Insert, menu open | `Ctrl-Y` | Accept suggestion (Vim built-in) | everywhere |
 | Insert | `Enter` | Newline; between `{}` opens an indented block | everywhere |
@@ -96,7 +100,8 @@ This installs `vim clangd git curl build-essential` with sudo, then sets up your
 | `scripts/setup-debian.sh` | apt packages (sudo only for apt), then `install.sh` + `doctor.sh` |
 | `scripts/install.sh` | Links `~/.vimrc` → this repo's `.vimrc`, backing up any previous file or symlink. Downloads vim-plug. Runs `:PlugInstall --sync` and verifies the result. Safe to rerun |
 | `scripts/doctor.sh` | Read-only checks. `[FAIL]` items make it exit nonzero; `[opt]` items are informational |
-| `scripts/smoke-test.sh` | Drives real Vim in a pseudo-terminal against `examples/c`: diagnostics, completion, navigation, hover, pairing, re-sourcing |
+| `scripts/smoke-test.sh` | Drives real Vim in a pseudo-terminal against `examples/c`: diagnostics, completion, navigation, hover, pairing, grammar underlines and `z=` (against a fake Ollama, `tests/fake_ollama.py`), re-sourcing |
+| `scripts/grammar_check.py` | Run by ALE, not by hand: sends paragraphs to Ollama and reports mistakes. Its tests: `python3 -I tests/test_grammar_check.py` |
 
 All scripts run from any directory, handle spaces in paths, work with macOS's Bash 3.2, and refuse to run as root.
 
@@ -114,6 +119,35 @@ clangd needs to know how each project is compiled. For a small C project, put a 
 For larger projects, or per-file flags, generate a `compile_commands.json` (e.g. `cmake -S . -B build -DCMAKE_EXPORT_COMPILE_COMMANDS=ON`). clangd finds it in the project root or in a `build/` directory.
 
 These flags belong to each project. They are deliberately **not** in the vimrc, so C flags never get applied to C++. [examples/c/README.md](examples/c/README.md) walks through both approaches.
+
+## Grammar checking
+
+In Markdown, text, and git commit buffers, a local model underlines spelling mistakes (red, as errors) and grammar or punctuation mistakes (as warnings). Everything stays on your machine. It needs [Ollama](https://ollama.com) running with `qwen3.5:9b` pulled, and `python3`. Without them it stays quiet: Vim says once per session why nothing is underlined, and `scripts/doctor.sh` shows what's missing.
+
+How it behaves:
+
+- **When:** ALE runs `scripts/grammar_check.py` after you stop typing for 1 s, when you leave Insert mode, on save, when you open the file, and after you scroll.
+- **What:** the paragraph under the cursor first, then the other paragraphs on screen, one model request at a time, so underlines fill in paragraph by paragraph. Text that has scrolled off screen is not sent. Checked paragraphs are cached in `~/.cache/vimrc-grammar` and answered instantly afterwards, so their underlines stay.
+- **Skipped:** code blocks, inline `code`, URLs, link targets, YAML front matter, tables, and HTML comments in Markdown. In git commit messages, `#` comment lines and the diff below the scissors line. While you type, the word at the cursor isn't flagged.
+- **Speed (M5, measured):** about 0.8 s for a paragraph without mistakes, 2 to 4 s with a few. Typing again stops a check in progress, so new text never waits behind an old check. The first check after the model was unloaded takes about 3.5 s longer.
+- **Accuracy:** on test notes it found 9 of 10 planted mistakes, plus 3 of 4 typos in a real commit message. Treat suggestions as suggestions. The model sometimes proposes a fix that changes the meaning.
+- **Fixes:** `z=` on an underlined word replaces it with the suggestion, as one undo step. `:ALEDetail` or the line's virtual text shows the suggestion first.
+- **Cost:** the model uses about 5.5 GB of memory while loaded. Ollama unloads it 30 minutes after the last check. Each check keeps the GPU busy for one to a few seconds, which shows on battery.
+
+Vim's own spell checker stays off. Turn it on whenever you want with `:setlocal spell`. Then `]s`/`[s` move between misspellings, `zg` adds a word, and `z=` shows spelling suggestions wherever there is no grammar fix.
+
+Settings (put them before the vimrc is loaded, e.g. `vim --cmd 'let g:vimrc_grammar_enabled = 0'`):
+
+| Variable | Default | Meaning |
+| --- | --- | --- |
+| `g:vimrc_grammar_enabled` | `1` | `0` turns grammar checking off |
+| `g:vimrc_grammar_model` | `'qwen3.5:9b'` | Ollama model |
+| `g:vimrc_grammar_host` | `$OLLAMA_HOST`, else `'http://127.0.0.1:11434'` | Ollama server, e.g. another machine on the LAN |
+| `g:vimrc_grammar_delay` | `1000` | Milliseconds without typing before a check |
+| `g:vimrc_grammar_keep_alive` | `'30m'` | How long Ollama keeps the model loaded after a check |
+| `g:vimrc_grammar_helper` | `<repo>/scripts/grammar_check.py` | Helper script, if `~/.vimrc` is a copy instead of the symlink |
+
+To pause it in one buffer, run `:ALEToggleBuffer`. To forget all cached answers, run `rm -rf ~/.cache/vimrc-grammar`.
 
 ## Diagnostics commands
 
@@ -145,6 +179,7 @@ The plugins are declared in `.vimrc` between `plug#begin` and `plug#end`, pinned
 ```bash
 rm ~/.vimrc && mv ~/.vimrc.backup.<timestamp> ~/.vimrc   # restore the previous vimrc
 rm -rf ~/.vim/plugged ~/.vim/autoload/plug.vim          # remove plugins and vim-plug
+rm -rf ~/.cache/vimrc-grammar                           # grammar-check cache
 ```
 
 `vim -Nu NONE` opens Vim with no configuration at all for emergencies. Homebrew packages installed by `--extras` can be removed with `brew uninstall shellcheck ruff`.

@@ -198,13 +198,72 @@ call s:Pair('Enter between {} opens an indented block',
       \ "iint f(void) {\<CR>return 0;", ['int f(void) {', "\treturn 0;", '}'])
 call s:Pair('Tab inserts a tab when no menu is open', "i\<Tab>x", ["\tx"])
 
+" ---------- Grammar checking (fake Ollama started by smoke-test.sh) ----------
+function! s:GrammarItems() abort
+  return filter(copy(s:Loclist()), 'v:val.linter_name ==# "grammar"')
+endfunction
+
+function! s:GrammarLines() abort
+  return map(s:GrammarItems(), 'v:val.lnum')
+endfunction
+
+if !empty($VIMRC_SMOKE_GRAMMAR_HOST)
+  let g:vimrc_grammar_host = $VIMRC_SMOKE_GRAMMAR_HOST
+
+  call s:Add('open a scratch Markdown buffer with the grammar linter',
+        \ {-> execute('edit! ' . fnameescape(tempname() . '.md'))},
+        \ {-> [&filetype ==# 'markdown' && map(ale#linter#Get('markdown'), 'v:val.name') ==# ['grammar']
+        \      && get(b:, 'ale_lint_delay') == 1000 && maparg('z=', 'n') =~# 'GrammarFix'
+        \      && maparg(']e', 'n') =~# 'ALENextWrap',
+        \      'ft=' . &filetype . ' linters=' . string(map(ale#linter#Get(&filetype), 'v:val.name'))
+        \      . ' z=' . maparg('z=', 'n')]},
+        \ {-> 1})
+  call s:Add('a misspelling is underlined after a pause',
+        \ {-> feedkeys("iI want a grammer checker.\<Esc>", 't')},
+        \ {-> [len(s:GrammarItems()) == 1 && s:GrammarItems()[0].col == 10
+        \      && s:GrammarItems()[0].end_col == 16 && s:GrammarItems()[0].type ==# 'E',
+        \      'loclist: ' . string(s:Loclist())]},
+        \ {-> s:Idle() && !empty(s:GrammarItems())}, 15000)
+  call s:Add('z= on the word applies the fix',
+        \ {-> [cursor(1, 12), feedkeys('z=', 't')]},
+        \ {-> s:Expect(['I want a grammar checker.'])})
+  call s:Add('u restores the original',
+        \ {-> feedkeys('u', 't')},
+        \ {-> s:Expect(['I want a grammer checker.'])})
+  call s:Add('z= away from an issue changes nothing',
+        \ {-> [cursor(1, 1), feedkeys('z=', 't')]},
+        \ {-> s:Expect(['I want a grammer checker.'])})
+  call s:Add('words in a fenced code block are not checked',
+        \ {-> [setline(1, ['Prose definately.', '', '```', 'grammer', '```']),
+        \      feedkeys("G\<Esc>", 't')]},
+        \ {-> [s:GrammarLines() ==# [1] && s:GrammarItems()[0].text =~# 'definately',
+        \      'loclist: ' . string(s:Loclist())]},
+        \ {-> s:Idle() && !empty(filter(s:GrammarItems(), 'v:val.text =~# "definately"'))}, 15000)
+
+  let s:commit_dir = tempname()
+  call mkdir(s:commit_dir, 'p')
+  call s:Add('git commit comment lines are not checked',
+        \ {-> [execute('edit! ' . fnameescape(s:commit_dir . '/COMMIT_EDITMSG')),
+        \      setline(1, ['fix: a definately better subject', '', '# grammer in a comment']),
+        \      feedkeys("\<Esc>", 't')]},
+        \ {-> [&filetype ==# 'gitcommit' && s:GrammarLines() ==# [1],
+        \      'ft=' . &filetype . ' loclist: ' . string(s:Loclist())]},
+        \ {-> s:Idle() && !empty(s:GrammarItems())}, 15000)
+  call s:Add('plain text uses the grammar linter',
+        \ {-> execute('enew! | setfiletype text')},
+        \ {-> [map(ale#linter#Get('text'), 'v:val.name') ==# ['grammar'] && maparg('z=', 'n') =~# 'GrammarFix',
+        \      string(map(ale#linter#Get('text'), 'v:val.name'))]},
+        \ {-> 1})
+endif
+
 " ---------- Re-sourcing ----------
 function! s:AutocmdCount(group, pattern) abort
   let l:out = execute('autocmd ' . a:group)
   return len(filter(split(l:out, "\n"), 'v:val =~# a:pattern'))
 endfunction
 function! s:CountAutocmds() abort
-  return [s:AutocmdCount('vimrc_ale', 's:'), s:AutocmdCount('amoled_black_shiny_markdown', 's:')]
+  return [s:AutocmdCount('vimrc_ale', 's:'), s:AutocmdCount('amoled_black_shiny_markdown', 's:'),
+        \ s:AutocmdCount('vimrc_grammar', 's:')]
 endfunction
 function! s:SourceTwice() abort
   let s:autocmds_before = s:CountAutocmds()

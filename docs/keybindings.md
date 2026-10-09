@@ -25,7 +25,7 @@ With only a `compile_flags.txt`, clangd knows the files you have opened in this 
 
 ## Diagnostics (buffer-local)
 
-Defined in C, C++, sh, Python, and Java buffers when ALE is loaded.
+Defined in C, C++, sh, Python, Java, Markdown, text, and git commit buffers when ALE is loaded.
 
 | Mode | Key | Action |
 | --- | --- | --- |
@@ -33,6 +33,16 @@ Defined in C, C++, sh, Python, and Java buffers when ALE is loaded.
 | Normal | `[e` | `:ALEPreviousWrap`: previous diagnostic, wrapping to the bottom |
 
 `]e`/`[e` have no Vim default.
+
+## Grammar fixes (buffer-local)
+
+Defined in Markdown, text, and git commit buffers when ALE is loaded and grammar checking is on (see the README's [Grammar checking](../README.md#grammar-checking)).
+
+| Mode | Key | Action | Vim default it replaces in those buffers |
+| --- | --- | --- | --- |
+| Normal | `z=` | On an underlined mistake: replace it with the model's suggestion, as one undo step, and echo what changed | spelling suggestions, which it still shows wherever there is no grammar fix |
+
+Away from a grammar mistake, `z=` is Vim's own spelling-suggestion list when `spell` is on (`:setlocal spell`), and otherwise says "No grammar suggestion here". `]s`/`[s`/`zg` are untouched.
 
 ## Completion (global)
 
@@ -86,6 +96,7 @@ To pause pairing temporarily, run `:call AutoPairsToggle()`.
 :verbose imap <S-Tab>
 :verbose imap <C-H>
 :verbose nmap gd
+:verbose nmap z=
 ```
 
 `verbose` shows which file defined the mapping. Lines from `~/.vim/plugged/auto-pairs/...` are auto-pairs. Lines from `.vimrc` are yours.
