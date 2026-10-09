@@ -77,6 +77,16 @@ If clangd reports `'stdio.h' file not found`:
 
 Do not add your local SDK path to the vimrc or to a committed `compile_flags.txt`. It differs between machines and Xcode versions.
 
+## Grammar checking (optional)
+
+Markdown, text, and git commit buffers are checked by a local model through [Ollama](https://ollama.com). Nothing leaves the machine.
+
+1. Install the Ollama app and start it. It keeps running in the menu bar.
+2. Run `ollama pull qwen3.5:9b` (a 6.6 GB download).
+3. Run `scripts/doctor.sh`. Under "Grammar checking" it should list python3, Ollama, and the model.
+
+The helper runs on Apple's `/usr/bin/python3` from the Command Line Tools. Without Ollama, Vim says once per session why nothing is underlined, and everything else works as usual. Behavior, settings, and costs are described in the README's [Grammar checking](../README.md#grammar-checking) section.
+
 ## Rollback
 
 `install.sh` prints the exact restore command when it moves a file. From this machine's install on 2026-10-06:

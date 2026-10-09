@@ -12,3 +12,7 @@ examples/c/*.o
 
 # tests/smoke.vim output when run without scripts/smoke-test.sh
 smoke-results.txt
+
+# Python bytecode from the grammar helper and its tests
+__pycache__/
+

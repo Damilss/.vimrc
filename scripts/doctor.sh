@@ -158,6 +158,48 @@ else
 	opt 'java: javac not installed' 'install a JDK'
 fi
 
+section 'Grammar checking in Markdown, text, and git commits (optional)'
+# vim_eval prints string(value): strip the quotes around a String.
+unquote() {
+	local v=$1
+	v=${v#\'}
+	printf '%s\n' "${v%\'}"
+}
+if ! command -v "$VIM_BIN" >/dev/null 2>&1; then
+	opt 'skipped (no Vim)'
+elif [ "$(vim_eval "get(g:, 'vimrc_grammar_enabled', 0)")" != 1 ]; then
+	opt 'turned off (g:vimrc_grammar_enabled is 0)'
+elif ! command -v python3 >/dev/null 2>&1; then
+	if [ "$OS" = Darwin ]; then
+		opt 'python3 not installed; grammar checking is off' 'xcode-select --install'
+	else
+		opt 'python3 not installed; grammar checking is off' 'sudo apt-get install python3'
+	fi
+else
+	opt "python3: $(python3 --version 2>&1)"
+	helper=$(unquote "$(vim_eval "g:vimrc_grammar_helper")")
+	model=$(unquote "$(vim_eval "g:vimrc_grammar_model")")
+	host=$(unquote "$(vim_eval "g:vimrc_grammar_host")")
+	if [ ! -f "$helper" ]; then
+		opt "helper not found: $helper" 'set g:vimrc_grammar_helper, or keep ~/.vimrc linked to the repo'
+	else
+		# Resolve the host the same way the helper does.
+		url=$(python3 -I -B -c 'import sys; sys.path.insert(0, sys.argv[1]); import grammar_check; print(grammar_check.normalize_host(sys.argv[2]))' \
+			"$(dirname "$helper")" "$host" 2>/dev/null) || url=$host
+		if version=$(curl -fsS --max-time 2 "$url/api/version" 2>/dev/null); then
+			opt "Ollama $(printf '%s' "$version" | sed -n 's/.*"version": *"\([^"]*\)".*/\1/p') at $url"
+			if curl -fsS --max-time 2 "$url/api/tags" 2>/dev/null |
+				python3 -I -c 'import json, sys; m = sys.argv[1]; names = [x.get("name") for x in json.load(sys.stdin).get("models", [])]; sys.exit(0 if m in names or m + ":latest" in names else 1)' "$model"; then
+				opt "model $model is installed"
+			else
+				opt "model $model is not installed" "ollama pull $model"
+			fi
+		else
+			opt "Ollama not reachable at $url" 'start the Ollama app (macOS) or "ollama serve"; install from https://ollama.com'
+		fi
+	fi
+fi
+
 printf '\n'
 if [ "$FAILED" -eq 0 ]; then
 	echo 'All required checks passed.'

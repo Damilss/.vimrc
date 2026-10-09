@@ -54,6 +54,20 @@ endif
 " missing, this section does nothing and ordinary editing is unaffected.
 let s:repo_dir = fnamemodify(resolve(expand('<sfile>:p')), ':h')
 
+" Grammar checking in Markdown, text, and git commit messages by a local
+" model through Ollama (see the Grammar checking section below).  Set any of
+" these before sourcing this file to change them; 0 turns the check off.
+let g:vimrc_grammar_enabled = get(g:, 'vimrc_grammar_enabled', 1)
+let g:vimrc_grammar_model = get(g:, 'vimrc_grammar_model', 'qwen3.5:9b')
+let g:vimrc_grammar_host = get(g:, 'vimrc_grammar_host',
+      \ empty($OLLAMA_HOST) ? 'http://127.0.0.1:11434' : $OLLAMA_HOST)
+" Milliseconds of no typing before a check.
+let g:vimrc_grammar_delay = get(g:, 'vimrc_grammar_delay', 1000)
+" How long Ollama keeps the model in memory after the last check.
+let g:vimrc_grammar_keep_alive = get(g:, 'vimrc_grammar_keep_alive', '30m')
+let g:vimrc_grammar_helper = get(g:, 'vimrc_grammar_helper',
+      \ s:repo_dir . '/scripts/grammar_check.py')
+
 " ALE reads these when it loads, so they must be set before plug#end().
 let g:ale_completion_enabled = 1
 " Only the linters listed here run; other filetypes are left alone.
@@ -65,6 +79,13 @@ let g:ale_linters = extend(get(g:, 'ale_linters', {}), {
       \ 'python': ['ruff', 'pyright'],
       \ 'java': ['javac'],
       \ }, 'keep')
+if g:vimrc_grammar_enabled
+  let g:ale_linters = extend(g:ale_linters, {
+        \ 'markdown': ['grammar'],
+        \ 'text': ['grammar'],
+        \ 'gitcommit': ['grammar'],
+        \ }, 'keep')
+endif
 " Check while typing (after a short pause), on leaving Insert mode, and on
 " save.  Nothing is fixed or reformatted automatically.
 let g:ale_lint_on_text_changed = 'always'
@@ -503,9 +524,167 @@ endfunction
 augroup vimrc_ale
   autocmd!
   autocmd FileType c,cpp,python call s:AleLspMaps()
-  autocmd FileType c,cpp,sh,python,java call s:AleDiagnosticMaps()
+  autocmd FileType c,cpp,sh,python,java,markdown,text,gitcommit call s:AleDiagnosticMaps()
   autocmd FileType c,cpp call s:CHint()
   " ALE has no per-buffer lint-on-change switch; javac is slow, so wait for
   " a longer pause before checking Java.
   autocmd FileType java let b:ale_lint_delay = 1500
+augroup END
+
+" ---------- Grammar checking ----------
+" In Markdown, text, and git commit buffers, ALE runs scripts/grammar_check.py
+" after each pause in typing.  It asks the local model about one paragraph at
+" a time, the one under the cursor first and then the others on screen, and
+" answers paragraphs it has already seen from a cache, so underlines fill in
+" quickly and stay.  Typing again stops a check in progress.  Spelling
+" mistakes are errors and grammar or punctuation mistakes are warnings; both
+" use the red undercurls above.  z= applies the suggested fix.
+
+if !exists('s:grammar_hints_shown')
+  let s:grammar_hints_shown = {}
+endif
+
+" The window showing the buffer: the current one if it does, else the first.
+function! s:GrammarWindow(buffer) abort
+  if bufnr('') == a:buffer
+    return win_getid()
+  endif
+  let l:wins = win_findbuf(a:buffer)
+  return empty(l:wins) ? 0 : l:wins[0]
+endfunction
+
+function! s:GrammarCommand(buffer) abort
+  let l:winid = s:GrammarWindow(a:buffer)
+  let l:info = l:winid ? getwininfo(l:winid) : []
+  let l:top = empty(l:info) ? 1 : l:info[0].topline
+  let l:bottom = empty(l:info) ? 1 : l:info[0].botline
+  let l:pos = l:winid ? getcurpos(l:winid) : [0, 1, 1, 0, 1]
+  let l:insert = l:winid == win_getid() && mode() =~# '^[iR]'
+  " exec, so stopping the job stops Python itself and Ollama sees the
+  " connection close.
+  return 'exec %e -I ' . ale#Escape(g:vimrc_grammar_helper)
+        \ . ' --filetype ' . ale#Escape(getbufvar(a:buffer, '&filetype'))
+        \ . ' --model ' . ale#Escape(g:vimrc_grammar_model)
+        \ . ' --host ' . ale#Escape(g:vimrc_grammar_host)
+        \ . ' --keep-alive ' . ale#Escape(g:vimrc_grammar_keep_alive)
+        \ . ' --top ' . l:top . ' --bottom ' . l:bottom
+        \ . ' --cursor ' . l:pos[1] . ':' . l:pos[2]
+        \ . (l:insert ? ' --insert' : '')
+endfunction
+
+" Once per session for each kind of problem, say why nothing is underlined.
+function! s:GrammarHint(item) abort
+  let l:status = get(a:item, 'status', '')
+  if has_key(s:grammar_hints_shown, l:status)
+    return
+  endif
+  let s:grammar_hints_shown[l:status] = 1
+  if l:status ==# 'no-model'
+    let l:message = 'no grammar check (model ' . g:vimrc_grammar_model
+          \ . ' not found). Run: ollama pull ' . g:vimrc_grammar_model
+  elseif l:status ==# 'unreachable'
+    let l:message = 'no grammar check (Ollama not reachable at '
+          \ . g:vimrc_grammar_host . '). Run: '
+          \ . fnameescape(s:repo_dir . '/scripts/doctor.sh')
+  else
+    let l:message = 'grammar check failed: ' . get(a:item, 'detail', '')
+  endif
+  echohl WarningMsg
+  echomsg 'vimrc: ' . l:message
+  echohl None
+endfunction
+
+function! s:GrammarRequeue(buffer, timer) abort
+  if bufexists(a:buffer)
+    call ale#Queue(0, '', a:buffer)
+  endif
+endfunction
+
+function! s:GrammarHandle(buffer, lines) abort
+  let l:loclist = []
+  let l:fixes = []
+  for l:line in a:lines
+    try
+      let l:item = json_decode(l:line)
+    catch
+      continue
+    endtry
+    if type(l:item) != v:t_dict
+      continue
+    elseif get(l:item, 'pending')
+      " More paragraphs on screen are unchecked: check the next one.
+      call timer_start(50, function('s:GrammarRequeue', [a:buffer]))
+    elseif has_key(l:item, 'status')
+      call s:GrammarHint(l:item)
+    elseif has_key(l:item, 'lnum')
+      call add(l:loclist, {'lnum': l:item.lnum, 'col': l:item.col,
+            \ 'end_col': l:item.end_col, 'type': l:item.type, 'text': l:item.text})
+      " ALE keeps only its own keys, so the fixes for z= are stored here.
+      call add(l:fixes, {'lnum': l:item.lnum, 'col': l:item.col,
+            \ 'wrong': l:item.wrong, 'fix': l:item.fix})
+    endif
+  endfor
+  call setbufvar(a:buffer, 'vimrc_grammar_fixes', l:fixes)
+  return l:loclist
+endfunction
+
+" z=: replace the reported text under the cursor with the model's fix (one
+" undo step).  Elsewhere it is Vim's z=, which suggests spellings when
+" 'spell' is on.
+function! s:GrammarFix() abort
+  let l:lnum = line('.')
+  let l:col = col('.')
+  let l:line = getline('.')
+  for l:item in filter(copy(get(b:, 'vimrc_grammar_fixes', [])), 'v:val.lnum == l:lnum')
+    " Find the text again, in case the line changed since the check.
+    let l:start = stridx(l:line, l:item.wrong)
+    while l:start >= 0
+      if l:start < l:col && l:col <= l:start + len(l:item.wrong)
+        call setline(l:lnum, strpart(l:line, 0, l:start) . l:item.fix
+              \ . strpart(l:line, l:start + len(l:item.wrong)))
+        call cursor(l:lnum, l:start + 1)
+        echo l:item.wrong . ' → ' . (empty(l:item.fix) ? '(deleted)' : l:item.fix)
+              \ . '  (u to undo)'
+        return
+      endif
+      let l:start = stridx(l:line, l:item.wrong, l:start + 1)
+    endwhile
+  endfor
+  if &l:spell
+    normal! z=
+  else
+    echo 'No grammar suggestion here'
+  endif
+endfunction
+
+function! s:GrammarSetup() abort
+  if !g:vimrc_grammar_enabled || exists(':ALEInfo') != 2
+        \ || !executable('python3') || !filereadable(g:vimrc_grammar_helper)
+    return
+  endif
+  call ale#linter#Define(&filetype, {
+        \ 'name': 'grammar',
+        \ 'executable': 'python3',
+        \ 'command': function('s:GrammarCommand'),
+        \ 'callback': function('s:GrammarHandle'),
+        \ })
+  let b:vimrc_grammar = 1
+  let b:ale_lint_delay = g:vimrc_grammar_delay
+  nnoremap <buffer> <silent> z= :call <SID>GrammarFix()<CR>
+endfunction
+
+" Scrolling brings new paragraphs on screen; check them after a pause.
+function! s:GrammarScrolled() abort
+  let l:buffer = winbufnr(str2nr(expand('<amatch>')))
+  if l:buffer > 0 && getbufvar(l:buffer, 'vimrc_grammar', 0)
+    call ale#Queue(getbufvar(l:buffer, 'ale_lint_delay', g:vimrc_grammar_delay), '', l:buffer)
+  endif
+endfunction
+
+augroup vimrc_grammar
+  autocmd!
+  autocmd FileType markdown,text,gitcommit call s:GrammarSetup()
+  if exists('##WinScrolled')
+    autocmd WinScrolled * call s:GrammarScrolled()
+  endif
 augroup END

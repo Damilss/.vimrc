@@ -61,6 +61,18 @@ Record the results in [implementation-status.md](implementation-status.md). Debi
 - clangd 19 (Debian) and Apple clangd 21 (macOS) can word some diagnostics differently. Both use the same project `compile_flags.txt`.
 - GCC may warn about things clangd doesn't, and the reverse. Always build with the real compiler.
 
+## Grammar checking (optional, not yet tested on Debian)
+
+Markdown, text, and git commit buffers can be checked by a local model through [Ollama](https://ollama.com), as on macOS. It needs `python3` (`sudo apt-get install python3` if it's missing) and an Ollama server. `scripts/doctor.sh` reports all three under "Grammar checking".
+
+- **A machine with about 6 GB of free memory:** install Ollama from <https://ollama.com/download/linux>, then run `ollama pull qwen3.5:9b`.
+- **A Raspberry Pi:** a 9B model is too big for it. Use the Mac's Ollama over the network instead:
+  1. On the Mac, run `launchctl setenv OLLAMA_HOST 0.0.0.0` and restart the Ollama app so it listens on the network. **Ollama has no password.** Anyone on the same network can then use it, so only do this on a network you trust.
+  2. On the Pi, add `export OLLAMA_HOST=<mac-name>.local:11434` to `~/.bashrc`. The vimrc uses `$OLLAMA_HOST` as the server address.
+- **To turn it off on one machine,** add `alias vim="vim --cmd 'let g:vimrc_grammar_enabled = 0'"` to `~/.bashrc`.
+
+Without a reachable server, Vim says once per session why nothing is underlined, and everything else works as usual.
+
 ## Rollback
 
 ```bash
