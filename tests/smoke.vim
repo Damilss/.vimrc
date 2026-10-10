@@ -71,12 +71,13 @@ function! s:Poll(timer) abort
   call s:Next()
 endfunction
 
-function! s:Loclist() abort
-  return get(get(g:, 'ale_buffer_info', {}), bufnr(''), {'loclist': []}).loclist
+" The current buffer's loclist, or the given buffer's.
+function! s:Loclist(...) abort
+  return get(get(g:, 'ale_buffer_info', {}), a:0 ? a:1 : bufnr(''), {'loclist': []}).loclist
 endfunction
 
-function! s:ErrorsOn(lnum) abort
-  return filter(copy(s:Loclist()), 'v:val.type ==# "E" && v:val.lnum == a:lnum')
+function! s:ErrorsOn(lnum, ...) abort
+  return filter(copy(call('s:Loclist', a:000)), 'v:val.type ==# "E" && v:val.lnum == a:lnum')
 endfunction
 
 function! s:Expect(expected) abort
@@ -162,6 +163,29 @@ call s:Add('back to main.c',
       \ {-> execute('bwipe! | buffer ' . s:main)},
       \ {-> [bufnr('') == s:main, 'buffer ' . bufnr('')]},
       \ {-> 1})
+" ALE says a check finished without saying which buffer it was for, so the
+" marks must still reach main.c when another buffer is current by then.
+" Open a window the moment ALE starts checking main.c, while clangd works.
+function! s:SwitchWhenLintStarts() abort
+  let s:switched = 0
+  augroup smoke_switch
+    autocmd!
+    autocmd User ALELintPre ++once let s:switched = bufnr('') == s:main | new
+  augroup END
+  call feedkeys("ggO#include \"nope1.h\"\<CR>#include \"nope2.h\"\<Esc>", 'nt')
+endfunction
+call s:Add('every missing #include is marked after switching windows mid-check',
+      \ function('s:SwitchWhenLintStarts'),
+      \ {-> [s:switched && bufnr('') != s:main
+      \      && !empty(s:ErrorsOn(1, s:main)) && !empty(s:ErrorsOn(2, s:main)),
+      \      'switched: ' . s:switched . ', main.c loclist: ' . string(s:Loclist(s:main))]},
+      \ {-> s:switched && !empty(s:ErrorsOn(1, s:main)) && !empty(s:ErrorsOn(2, s:main))}, 30000)
+call s:Add('close that window and undo',
+      \ {-> [execute('autocmd! smoke_switch'), execute('bwipe!'), feedkeys('u', 't')]},
+      \ {-> [bufnr('') == s:main && !&modified && empty(filter(copy(s:Loclist()), 'v:val.type ==# "E"')),
+      \      'buffer ' . bufnr('') . ', loclist: ' . string(s:Loclist())]},
+      \ {-> s:Idle() && bufnr('') == s:main && !&modified
+      \      && empty(filter(copy(s:Loclist()), 'v:val.type ==# "E"'))}, 10000)
 
 " ---------- Completion ----------
 function! s:CompletionWords() abort

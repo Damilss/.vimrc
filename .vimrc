@@ -120,7 +120,6 @@ let g:ale_root = extend(get(g:, 'ale_root', {}),
 " VS Code does.  Elsewhere any include that needs an include path would look
 " missing, so clangd's own report is left as it is.  Includes inside #if
 " blocks are left alone: an inactive include looks the same as a missing one.
-let s:showing_includes = 0
 
 " {lnum: [col, end_col, name]} for each #include outside #if blocks.  An
 " include guard (#ifndef X, then #define X) doesn't count as a block.
@@ -174,13 +173,7 @@ function! s:ShowIncludes(buffer, tick, response) abort
             \ 'text': printf("'%s' file not found", l:include[2])})
     endif
   endfor
-  " Showing results fires ALELintPost again; don't ask clangd a second time.
-  let s:showing_includes = 1
-  try
-    call ale#other_source#ShowResults(a:buffer, 'includes', l:loclist)
-  finally
-    let s:showing_includes = 0
-  endtry
+  call ale#other_source#ShowResults(a:buffer, 'includes', l:loclist)
 endfunction
 
 function! s:HasClangdConfig(buffer) abort
@@ -190,8 +183,7 @@ function! s:HasClangdConfig(buffer) abort
 endfunction
 
 function! s:CheckIncludes(buffer) abort
-  if s:showing_includes || getbufvar(a:buffer, '&filetype') !~# '^c\(pp\)\=$'
-        \ || !s:HasClangdConfig(a:buffer)
+  if getbufvar(a:buffer, '&filetype') !~# '^c\(pp\)\=$' || !s:HasClangdConfig(a:buffer)
     return
   endif
   try
@@ -204,9 +196,26 @@ function! s:CheckIncludes(buffer) abort
   endtry
 endfunction
 
+" ALELintPost doesn't say which buffer ALE finished checking; it runs in
+" whichever buffer is current by then.  So note each buffer as ALE starts
+" checking it (ALEWantResults names it) and ask about it once ALE is done.
+" Showing the marks fires ALELintPost again, but starts no check, so clangd
+" isn't asked a second time.
+let s:checking = get(s:, 'checking', {})
+
+function! s:CheckFinished() abort
+  for l:buffer in map(keys(s:checking), 'str2nr(v:val)')
+    if !ale#engine#IsCheckingBuffer(l:buffer)
+      call remove(s:checking, l:buffer)
+      call s:CheckIncludes(l:buffer)
+    endif
+  endfor
+endfunction
+
 augroup vimrc_clangd_includes
   autocmd!
-  autocmd User ALELintPost call s:CheckIncludes(bufnr(''))
+  autocmd User ALEWantResults let s:checking[g:ale_want_results_buffer] = 1
+  autocmd User ALELintPost call s:CheckFinished()
 augroup END
 
 " auto-pairs: keep pair insertion, skipping, Backspace, and Enter, but not
