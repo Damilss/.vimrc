@@ -203,6 +203,19 @@ endfunction
 " isn't asked a second time.
 let s:checking = get(s:, 'checking', {})
 
+" Note the buffer only if ALE checks it with clangd, so a server turned off
+" with b:ale_linters, g:ale_linters_ignore, or g:ale_disable_lsp isn't
+" started.  Pick the linters now, as ALE just did: it reads b:ale_linters
+" from the current buffer, which may be another one by the time it's done.
+function! s:LintStarting(buffer) abort
+  let l:filetype = getbufvar(a:buffer, '&filetype')
+  let l:linters = ale#engine#ignore#Exclude(l:filetype, ale#linter#Get(l:filetype),
+        \ ale#Var(a:buffer, 'linters_ignore'), ale#Var(a:buffer, 'disable_lsp'))
+  if index(map(l:linters, 'v:val.name'), 'clangd') >= 0
+    let s:checking[a:buffer] = 1
+  endif
+endfunction
+
 function! s:CheckFinished() abort
   for l:buffer in map(keys(s:checking), 'str2nr(v:val)')
     if !ale#engine#IsCheckingBuffer(l:buffer)
@@ -214,7 +227,7 @@ endfunction
 
 augroup vimrc_clangd_includes
   autocmd!
-  autocmd User ALEWantResults let s:checking[g:ale_want_results_buffer] = 1
+  autocmd User ALEWantResults call s:LintStarting(g:ale_want_results_buffer)
   autocmd User ALELintPost call s:CheckFinished()
 augroup END
 

@@ -186,6 +186,31 @@ call s:Add('close that window and undo',
       \      'buffer ' . bufnr('') . ', loclist: ' . string(s:Loclist())]},
       \ {-> s:Idle() && bufnr('') == s:main && !&modified
       \      && empty(filter(copy(s:Loclist()), 'v:val.type ==# "E"'))}, 10000)
+" In a configured folder, but with clangd turned off for the buffer: the
+" include check must not start clangd for it.  The filetype is set after
+" b:ale_linters, so ALE never checks the buffer with clangd.
+function! s:OpenWithoutClangd() abort
+  let l:dir = tempname()
+  call mkdir(l:dir, 'p')
+  call writefile([], l:dir . '/compile_flags.txt')
+  let s:connections = len(ale#lsp#GetConnections())
+  new
+  let b:ale_linters = ['cc']
+  execute 'file ' . fnameescape(l:dir . '/off.c')
+  setfiletype c
+  call feedkeys("i#include \"nope1.h\"\<CR>#include \"nope2.h\"\<Esc>", 'nt')
+endfunction
+call s:Add('with clangd turned off for a buffer, the include check leaves it alone',
+      \ function('s:OpenWithoutClangd'),
+      \ {-> [get(b:, 'ale_linted', 0) > 0 && len(ale#lsp#GetConnections()) == s:connections
+      \      && empty(filter(copy(s:Loclist()), 'v:val.linter_name is# "includes"')),
+      \      'checked ' . get(b:, 'ale_linted', 0) . 'x, language servers ' . s:connections
+      \      . ' -> ' . len(ale#lsp#GetConnections()) . ', loclist: ' . string(s:Loclist())]},
+      \ {-> s:Idle() && s:HeldFor({-> get(b:, 'ale_linted', 0) > 0}, 1500)}, 30000)
+call s:Add('close that buffer',
+      \ {-> execute('bwipe!')},
+      \ {-> [bufnr('') == s:main, 'buffer ' . bufnr('')]},
+      \ {-> 1})
 
 " ---------- Completion ----------
 function! s:CompletionWords() abort
