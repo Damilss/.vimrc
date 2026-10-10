@@ -140,6 +140,28 @@ call s:Add('undo clears the missing #include errors',
       \ {-> [!&modified && empty(filter(copy(s:Loclist()), 'v:val.type ==# "E"')),
       \      'loclist: ' . string(s:Loclist())]},
       \ {-> s:Idle() && !&modified && empty(filter(copy(s:Loclist()), 'v:val.type ==# "E"'))}, 10000)
+" With no compile_commands.json, compile_flags.txt, or .clangd above the
+" file, only clangd's own report shows.  Wait a while after it appears, so a
+" second error would have had time to arrive.
+function! s:HeldFor(cond, ms) abort
+  if !a:cond()
+    let s:held_since = []
+    return 0
+  endif
+  if empty(get(s:, 'held_since', []))
+    let s:held_since = reltime()
+  endif
+  return reltimefloat(reltime(s:held_since)) * 1000 >= a:ms
+endfunction
+call s:Add('outside a configured project only the first missing #include shows',
+      \ {-> [execute('edit ' . fnameescape(tempname() . '.c')),
+      \      feedkeys("i#include \"nope1.h\"\<CR>#include \"nope2.h\"\<Esc>", 'nt')]},
+      \ {-> [!empty(s:ErrorsOn(1)) && empty(s:ErrorsOn(2)), 'loclist: ' . string(s:Loclist())]},
+      \ {-> s:Idle() && s:HeldFor({-> !empty(s:ErrorsOn(1))}, 1500)}, 30000)
+call s:Add('back to main.c',
+      \ {-> execute('bwipe! | buffer ' . s:main)},
+      \ {-> [bufnr('') == s:main, 'buffer ' . bufnr('')]},
+      \ {-> 1})
 
 " ---------- Completion ----------
 function! s:CompletionWords() abort

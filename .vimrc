@@ -114,8 +114,11 @@ let g:ale_root = extend(get(g:, 'ale_root', {}),
 
 " clangd reports only the first missing header in the #include block at the
 " top of a file: clang treats a missing header as fatal and reports nothing
-" more in that pass.  After clangd's results arrive, ask it which includes it
-" resolved and mark every other one, as VS Code does.  Includes inside #if
+" more in that pass.  In projects that give clangd their settings
+" (compile_commands.json, compile_flags.txt, or .clangd), ask it which
+" includes it resolved after its results arrive and mark every other one, as
+" VS Code does.  Elsewhere any include that needs an include path would look
+" missing, so clangd's own report is left as it is.  Includes inside #if
 " blocks are left alone: an inactive include looks the same as a missing one.
 let s:showing_includes = 0
 
@@ -180,8 +183,15 @@ function! s:ShowIncludes(buffer, tick, response) abort
   endtry
 endfunction
 
+function! s:HasClangdConfig(buffer) abort
+  return !empty(ale#c#FindCompileCommands(a:buffer)[1])
+        \ || !empty(ale#path#FindNearestFile(a:buffer, 'compile_flags.txt'))
+        \ || !empty(ale#path#FindNearestFile(a:buffer, '.clangd'))
+endfunction
+
 function! s:CheckIncludes(buffer) abort
   if s:showing_includes || getbufvar(a:buffer, '&filetype') !~# '^c\(pp\)\=$'
+        \ || !s:HasClangdConfig(a:buffer)
     return
   endif
   try
