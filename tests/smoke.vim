@@ -71,12 +71,13 @@ function! s:Poll(timer) abort
   call s:Next()
 endfunction
 
-function! s:Loclist() abort
-  return get(get(g:, 'ale_buffer_info', {}), bufnr(''), {'loclist': []}).loclist
+" The current buffer's loclist, or the given buffer's.
+function! s:Loclist(...) abort
+  return get(get(g:, 'ale_buffer_info', {}), a:0 ? a:1 : bufnr(''), {'loclist': []}).loclist
 endfunction
 
-function! s:ErrorsOn(lnum) abort
-  return filter(copy(s:Loclist()), 'v:val.type ==# "E" && v:val.lnum == a:lnum')
+function! s:ErrorsOn(lnum, ...) abort
+  return filter(copy(call('s:Loclist', a:000)), 'v:val.type ==# "E" && v:val.lnum == a:lnum')
 endfunction
 
 function! s:Expect(expected) abort
@@ -127,6 +128,89 @@ call s:Add('undo clears the error',
       \ {-> [!&modified && empty(filter(copy(s:Loclist()), 'v:val.type ==# "E"')),
       \      'loclist: ' . string(s:Loclist())]},
       \ {-> s:Idle() && !&modified && empty(filter(copy(s:Loclist()), 'v:val.type ==# "E"'))}, 10000)
+" clangd reports only the first missing header; the vimrc marks the rest,
+" except inside #if blocks.  'n': auto-pairs would double the quotes.
+call s:Add('every missing #include is reported, not just the first',
+      \ {-> feedkeys("ggO#include \"nope1.h\"\<CR>#include \"nope2.h\"\<CR>"
+      \      . "#if 0\<CR>#include \"nope3.h\"\<CR>#endif\<Esc>", 'nt')},
+      \ {-> [!empty(s:ErrorsOn(1)) && !empty(s:ErrorsOn(2)) && empty(s:ErrorsOn(4)),
+      \      'loclist: ' . string(s:Loclist())]},
+      \ {-> s:Idle() && !empty(s:ErrorsOn(1)) && !empty(s:ErrorsOn(2))}, 30000)
+call s:Add('undo clears the missing #include errors',
+      \ {-> feedkeys('u', 't')},
+      \ {-> [!&modified && empty(filter(copy(s:Loclist()), 'v:val.type ==# "E"')),
+      \      'loclist: ' . string(s:Loclist())]},
+      \ {-> s:Idle() && !&modified && empty(filter(copy(s:Loclist()), 'v:val.type ==# "E"'))}, 10000)
+" With no compile_commands.json, compile_flags.txt, or .clangd above the
+" file, only clangd's own report shows.  Wait a while after it appears, so a
+" second error would have had time to arrive.
+function! s:HeldFor(cond, ms) abort
+  if !a:cond()
+    let s:held_since = []
+    return 0
+  endif
+  if empty(get(s:, 'held_since', []))
+    let s:held_since = reltime()
+  endif
+  return reltimefloat(reltime(s:held_since)) * 1000 >= a:ms
+endfunction
+call s:Add('outside a configured project only the first missing #include shows',
+      \ {-> [execute('edit ' . fnameescape(tempname() . '.c')),
+      \      feedkeys("i#include \"nope1.h\"\<CR>#include \"nope2.h\"\<Esc>", 'nt')]},
+      \ {-> [!empty(s:ErrorsOn(1)) && empty(s:ErrorsOn(2)), 'loclist: ' . string(s:Loclist())]},
+      \ {-> s:Idle() && s:HeldFor({-> !empty(s:ErrorsOn(1))}, 1500)}, 30000)
+call s:Add('back to main.c',
+      \ {-> execute('bwipe! | buffer ' . s:main)},
+      \ {-> [bufnr('') == s:main, 'buffer ' . bufnr('')]},
+      \ {-> 1})
+" ALE says a check finished without saying which buffer it was for, so the
+" marks must still reach main.c when another buffer is current by then.
+" Open a window the moment ALE starts checking main.c, while clangd works.
+function! s:SwitchWhenLintStarts() abort
+  let s:switched = 0
+  augroup smoke_switch
+    autocmd!
+    autocmd User ALELintPre ++once let s:switched = bufnr('') == s:main | new
+  augroup END
+  call feedkeys("ggO#include \"nope1.h\"\<CR>#include \"nope2.h\"\<Esc>", 'nt')
+endfunction
+call s:Add('every missing #include is marked after switching windows mid-check',
+      \ function('s:SwitchWhenLintStarts'),
+      \ {-> [s:switched && bufnr('') != s:main
+      \      && !empty(s:ErrorsOn(1, s:main)) && !empty(s:ErrorsOn(2, s:main)),
+      \      'switched: ' . s:switched . ', main.c loclist: ' . string(s:Loclist(s:main))]},
+      \ {-> s:switched && !empty(s:ErrorsOn(1, s:main)) && !empty(s:ErrorsOn(2, s:main))}, 30000)
+call s:Add('close that window and undo',
+      \ {-> [execute('autocmd! smoke_switch'), execute('bwipe!'), feedkeys('u', 't')]},
+      \ {-> [bufnr('') == s:main && !&modified && empty(filter(copy(s:Loclist()), 'v:val.type ==# "E"')),
+      \      'buffer ' . bufnr('') . ', loclist: ' . string(s:Loclist())]},
+      \ {-> s:Idle() && bufnr('') == s:main && !&modified
+      \      && empty(filter(copy(s:Loclist()), 'v:val.type ==# "E"'))}, 10000)
+" In a configured folder, but with clangd turned off for the buffer: the
+" include check must not start clangd for it.  The filetype is set after
+" b:ale_linters, so ALE never checks the buffer with clangd.
+function! s:OpenWithoutClangd() abort
+  let l:dir = tempname()
+  call mkdir(l:dir, 'p')
+  call writefile([], l:dir . '/compile_flags.txt')
+  let s:connections = len(ale#lsp#GetConnections())
+  new
+  let b:ale_linters = ['cc']
+  execute 'file ' . fnameescape(l:dir . '/off.c')
+  setfiletype c
+  call feedkeys("i#include \"nope1.h\"\<CR>#include \"nope2.h\"\<Esc>", 'nt')
+endfunction
+call s:Add('with clangd turned off for a buffer, the include check leaves it alone',
+      \ function('s:OpenWithoutClangd'),
+      \ {-> [get(b:, 'ale_linted', 0) > 0 && len(ale#lsp#GetConnections()) == s:connections
+      \      && empty(filter(copy(s:Loclist()), 'v:val.linter_name is# "includes"')),
+      \      'checked ' . get(b:, 'ale_linted', 0) . 'x, language servers ' . s:connections
+      \      . ' -> ' . len(ale#lsp#GetConnections()) . ', loclist: ' . string(s:Loclist())]},
+      \ {-> s:Idle() && s:HeldFor({-> get(b:, 'ale_linted', 0) > 0}, 1500)}, 30000)
+call s:Add('close that buffer',
+      \ {-> execute('bwipe!')},
+      \ {-> [bufnr('') == s:main, 'buffer ' . bufnr('')]},
+      \ {-> 1})
 
 " ---------- Completion ----------
 function! s:CompletionWords() abort

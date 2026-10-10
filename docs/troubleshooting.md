@@ -55,6 +55,8 @@ The message is `vimrc: no C/C++ diagnostics (missing clangd)`.
 3. **Debian:** `sudo apt-get install build-essential` provides `/usr/include`.
 4. If your **own** headers aren't found, add `-Iinclude` (relative to the project root) to the project's `compile_flags.txt`.
 
+clangd reports only the **first** missing header in the block of `#include`s at the top of a file. Clang treats a missing header as fatal and reports nothing more in that pass. In projects that give clangd their settings (a `compile_commands.json`, `compile_flags.txt`, or `.clangd` above the file), the vimrc marks the others: once clangd's results arrive, it asks clangd which includes it resolved and flags each of the rest as `[includes] Error: 'x.h' file not found`. Without one of those files you get clangd's report as is, because every include that needs an include path would look missing. Includes inside `#if`/`#ifdef` blocks (other than an include guard) aren't marked, because an inactive include looks the same as a missing one.
+
 clangd's guide to system headers: <https://clangd.llvm.org/guides/system-headers>.
 
 ## Compile database discovery
