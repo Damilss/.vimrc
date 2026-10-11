@@ -136,6 +136,15 @@ call s:Add('every missing #include is reported, not just the first',
       \ {-> [!empty(s:ErrorsOn(1)) && !empty(s:ErrorsOn(2)) && empty(s:ErrorsOn(4)),
       \      'loclist: ' . string(s:Loclist())]},
       \ {-> s:Idle() && !empty(s:ErrorsOn(1)) && !empty(s:ErrorsOn(2))}, 30000)
+" clangd reports line 1 itself.  The includes after a missing one that it
+" does find (<stdio.h>, "vec.h") must not be marked.
+function! s:IncludeMarks(...) abort
+  return map(filter(copy(call('s:Loclist', a:000)), 'v:val.linter_name is# "includes"'), 'v:val.lnum')
+endfunction
+call s:Add('includes clangd finds after a missing one are not marked',
+      \ {-> 0},
+      \ {-> [s:IncludeMarks() ==# [2], 'includes marks: ' . string(s:IncludeMarks())]},
+      \ {-> 1})
 call s:Add('undo clears the missing #include errors',
       \ {-> feedkeys('u', 't')},
       \ {-> [!&modified && empty(filter(copy(s:Loclist()), 'v:val.type ==# "E"')),
@@ -208,6 +217,29 @@ call s:Add('with clangd turned off for a buffer, the include check leaves it alo
       \      . ' -> ' . len(ale#lsp#GetConnections()) . ', loclist: ' . string(s:Loclist())]},
       \ {-> s:Idle() && s:HeldFor({-> get(b:, 'ale_linted', 0) > 0}, 1500)}, 30000)
 call s:Add('close that buffer',
+      \ {-> execute('bwipe!')},
+      \ {-> [bufnr('') == s:main, 'buffer ' . bufnr('')]},
+      \ {-> 1})
+" In a configured folder, an #include inside a /* */ comment isn't marked:
+" clangd ignores it.  Then turning clangd off for the buffer clears the
+" marks it had.
+function! s:OpenCommented() abort
+  let l:dir = tempname()
+  call mkdir(l:dir, 'p')
+  call writefile([], l:dir . '/compile_flags.txt')
+  call writefile(['#include "nope1.h"', '#include "nope2.h"', '/*', '#include "nope3.h"', '*/'],
+        \ l:dir . '/commented.c')
+  execute 'edit ' . fnameescape(l:dir . '/commented.c')
+endfunction
+call s:Add('an #include inside a /* */ comment is not marked',
+      \ function('s:OpenCommented'),
+      \ {-> [s:IncludeMarks() ==# [2], 'includes marks: ' . string(s:IncludeMarks())]},
+      \ {-> s:Idle() && s:HeldFor({-> !empty(s:IncludeMarks())}, 1500)}, 30000)
+call s:Add('turning clangd off for a buffer clears its marks',
+      \ {-> [execute('let b:ale_linters = [''cc'']'), execute('ALELint')]},
+      \ {-> [empty(s:IncludeMarks()), 'includes marks: ' . string(s:IncludeMarks())]},
+      \ {-> s:Idle() && empty(s:IncludeMarks())}, 10000)
+call s:Add('close that file',
       \ {-> execute('bwipe!')},
       \ {-> [bufnr('') == s:main, 'buffer ' . bufnr('')]},
       \ {-> 1})

@@ -30,7 +30,6 @@ inoremap <C-H> <C-W>
 
 " Ask Vim's built-in syntax files for richer highlighting.
 let g:java_highlight_all = 1
-let g:java_highlight_functions = 'style'
 let g:java_highlight_generics = 1
 let g:c_functions = 1
 let g:c_function_pointers = 1
@@ -120,11 +119,53 @@ let g:ale_root = extend(get(g:, 'ale_root', {}),
 " VS Code does.  Elsewhere any include that needs an include path would look
 " missing, so clangd's own report is left as it is.  Includes inside #if
 " blocks are left alone: an inactive include looks the same as a missing one.
+" So are includes inside /* */ comments, which clangd ignores.
 
-" {lnum: [col, end_col, name]} for each #include outside #if blocks.  An
-" include guard (#ifndef X, then #define X) doesn't count as a block.
+" a:lines with the text of /* */ comments replaced by spaces, so columns
+" stay the same.  // comments and string or character literals are skipped
+" over, so a /* inside one doesn't start a comment.
+function! s:BlankComments(lines) abort
+  let l:in_comment = 0
+  let l:result = []
+  for l:line in a:lines
+    let l:i = 0
+    while l:i < len(l:line)
+      if l:in_comment
+        let l:from = l:i
+      else
+        let l:i = match(l:line, '/[*/]\|["'']', l:i)
+        if l:i < 0 || l:line[l:i : l:i + 1] is# '//'
+          break
+        elseif l:line[l:i] isnot# '/'
+          let l:q = l:line[l:i]
+          let l:end = matchend(l:line, l:q . '\%(\\.\|[^\\' . l:q . ']\)*' . l:q, l:i)
+          let l:i = l:end < 0 ? len(l:line) : l:end
+          continue
+        endif
+        let l:from = l:i + 2
+      endif
+      let l:end = matchend(l:line, '\*/', l:from)
+      let l:stop = l:end < 0 ? len(l:line) : l:end
+      let l:line = strpart(l:line, 0, l:i) . repeat(' ', l:stop - l:i) . strpart(l:line, l:stop)
+      let l:in_comment = l:end < 0
+      let l:i = l:stop
+    endwhile
+    call add(l:result, l:line)
+  endfor
+  return l:result
+endfunction
+
+" {lnum: [col, end_col, name]} for each #include outside #if blocks and
+" comments.  An include guard (#ifndef X, then #define X) doesn't count as a
+" block.
 function! s:IncludeLines(buffer) abort
   let l:lines = getbufline(a:buffer, 1, '$')
+  " Nothing after the last #include matters.
+  let l:after_last = match(reverse(copy(l:lines)), '^\s*#\s*include')
+  if l:after_last < 0
+    return {}
+  endif
+  let l:lines = s:BlankComments(l:lines[: -1 - l:after_last])
   let l:blocks = []
   let l:includes = {}
   for l:lnum in range(1, len(l:lines))
@@ -182,8 +223,18 @@ function! s:HasClangdConfig(buffer) abort
         \ || !empty(ale#path#FindNearestFile(a:buffer, '.clangd'))
 endfunction
 
-function! s:CheckIncludes(buffer) abort
-  if getbufvar(a:buffer, '&filetype') !~# '^c\(pp\)\=$' || !s:HasClangdConfig(a:buffer)
+" Remove the marks from a buffer that no longer gets the check, e.g. after
+" clangd is turned off for it or its compile_flags.txt is deleted.
+function! s:ClearIncludes(buffer) abort
+  if !empty(filter(copy(ale#engine#GetLoclist(a:buffer)), 'v:val.linter_name is# "includes"'))
+    call ale#other_source#ShowResults(a:buffer, 'includes', [])
+  endif
+endfunction
+
+function! s:CheckIncludes(buffer, clangd) abort
+  if !a:clangd || getbufvar(a:buffer, '&filetype') !~# '^c\(pp\)\=$'
+        \ || !s:HasClangdConfig(a:buffer)
+    call s:ClearIncludes(a:buffer)
     return
   endif
   try
@@ -203,24 +254,24 @@ endfunction
 " isn't asked a second time.
 let s:checking = get(s:, 'checking', {})
 
-" Note the buffer only if ALE checks it with clangd, so a server turned off
+" Note whether ALE checks the buffer with clangd, so a server turned off
 " with b:ale_linters, g:ale_linters_ignore, or g:ale_disable_lsp isn't
-" started.  Pick the linters now, as ALE just did: it reads b:ale_linters
-" from the current buffer, which may be another one by the time it's done.
+" started, and its old marks are cleared.  Pick the linters now, as ALE just
+" did: it reads b:ale_linters from the current buffer, which may be another
+" one by the time it's done.
 function! s:LintStarting(buffer) abort
   let l:filetype = getbufvar(a:buffer, '&filetype')
   let l:linters = ale#engine#ignore#Exclude(l:filetype, ale#linter#Get(l:filetype),
         \ ale#Var(a:buffer, 'linters_ignore'), ale#Var(a:buffer, 'disable_lsp'))
-  if index(map(l:linters, 'v:val.name'), 'clangd') >= 0
-    let s:checking[a:buffer] = 1
-  endif
+  let s:checking[a:buffer] = index(map(l:linters, 'v:val.name'), 'clangd') >= 0
 endfunction
 
+" Clearing marks fires ALELintPost from inside this loop, so skip buffers a
+" nested call has already handled.
 function! s:CheckFinished() abort
-  for l:buffer in map(keys(s:checking), 'str2nr(v:val)')
-    if !ale#engine#IsCheckingBuffer(l:buffer)
-      call remove(s:checking, l:buffer)
-      call s:CheckIncludes(l:buffer)
+  for l:buffer in keys(s:checking)
+    if has_key(s:checking, l:buffer) && !ale#engine#IsCheckingBuffer(str2nr(l:buffer))
+      call s:CheckIncludes(str2nr(l:buffer), remove(s:checking, l:buffer))
     endif
   endfor
 endfunction
@@ -294,17 +345,34 @@ highlight TabLine      guifg=#757575 guibg=#0E0E0E gui=NONE ctermfg=243 ctermbg=
 highlight TabLineSel   guifg=#FFFFFF guibg=#0E0E0E gui=bold ctermfg=15  ctermbg=233 cterm=bold
 highlight TabLineFill  guifg=#343434 guibg=#0E0E0E gui=NONE ctermfg=236 ctermbg=233 cterm=NONE
 highlight VertSplit    guifg=#343434 guibg=#0E0E0E gui=NONE ctermfg=236 ctermbg=233 cterm=NONE
-highlight WinSeparator guifg=#343434 guibg=#0E0E0E gui=NONE ctermfg=236 ctermbg=233 cterm=NONE
 highlight NonText      guifg=#343434 guibg=#0E0E0E gui=NONE ctermfg=236 ctermbg=233 cterm=NONE
-highlight Whitespace   guifg=#242424 guibg=NONE    gui=NONE ctermfg=235 ctermbg=NONE cterm=NONE
+" 'listchars' whitespace, in the theme's editorWhitespace color.
+highlight SpecialKey   guifg=#242424 guibg=NONE    gui=NONE ctermfg=235 ctermbg=NONE cterm=NONE
 highlight EndOfBuffer  guifg=#0E0E0E guibg=#0E0E0E gui=NONE ctermfg=233 ctermbg=233 cterm=NONE
 highlight Directory    guifg=#6CC7F6 guibg=NONE    gui=NONE ctermfg=81  ctermbg=NONE cterm=NONE
 highlight WildMenu     guifg=#FFFFFF guibg=#343434 gui=bold ctermfg=15  ctermbg=236 cterm=bold
+highlight Conceal      guifg=#757575 guibg=NONE    gui=NONE ctermfg=243 ctermbg=NONE cterm=NONE
+highlight MoreMsg      guifg=#5BC266 guibg=NONE    gui=bold ctermfg=71  ctermbg=NONE cterm=bold
+highlight Question     guifg=#5BC266 guibg=NONE    gui=bold ctermfg=71  ctermbg=NONE cterm=bold
+highlight ToolbarLine  guifg=NONE    guibg=#242424 gui=NONE ctermfg=NONE ctermbg=235 cterm=NONE
+highlight ToolbarButton guifg=#FFFFFF guibg=#343434 gui=bold ctermfg=15 ctermbg=236 cterm=bold
+highlight! link StatusLineTerm   StatusLine
+highlight! link StatusLineTermNC StatusLineNC
 
 highlight DiffAdd    guifg=#5BC266 guibg=#0E0E0E gui=NONE ctermfg=71  ctermbg=233 cterm=NONE
 highlight DiffDelete guifg=#E1270E guibg=#0E0E0E gui=NONE ctermfg=160 ctermbg=233 cterm=NONE
 highlight DiffChange guifg=#FBCC43 guibg=#0E0E0E gui=NONE ctermfg=221 ctermbg=233 cterm=NONE
 highlight DiffText   guifg=#FFFFFF guibg=#343434 gui=bold ctermfg=15  ctermbg=236 cterm=bold
+" Lines added, changed, or removed in diff and git syntax (Vim 9.1).
+highlight Added      guifg=#5BC266 guibg=NONE    gui=NONE ctermfg=71  ctermbg=NONE cterm=NONE
+highlight Changed    guifg=#FBCC43 guibg=NONE    gui=NONE ctermfg=221 ctermbg=NONE cterm=NONE
+highlight Removed    guifg=#E1270E guibg=NONE    gui=NONE ctermfg=160 ctermbg=NONE cterm=NONE
+
+" Spelling undercurls in the theme's terminal red, blue, magenta, and cyan.
+highlight SpellBad   guifg=NONE guibg=NONE gui=undercurl guisp=#E1270E ctermfg=NONE ctermbg=NONE cterm=underline
+highlight SpellCap   guifg=NONE guibg=NONE gui=undercurl guisp=#535BCF ctermfg=NONE ctermbg=NONE cterm=underline
+highlight SpellRare  guifg=NONE guibg=NONE gui=undercurl guisp=#BF5AF2 ctermfg=NONE ctermbg=NONE cterm=underline
+highlight SpellLocal guifg=NONE guibg=NONE gui=undercurl guisp=#6CC7F6 ctermfg=NONE ctermbg=NONE cterm=underline
 
 " ---------- Exact syntax palette ----------
 " The theme's comment is #6160A4AA (opaque #454572 over #0E0E0E), which is
@@ -325,6 +393,20 @@ highlight VSSource      guifg=#EEEEEE guibg=NONE gui=NONE   ctermfg=255 ctermbg=
 highlight VSTodo        guifg=#FFB638 guibg=NONE gui=bold   ctermfg=215 ctermbg=NONE cterm=bold
 highlight VSError       guifg=#E1270E guibg=#0E0E0E gui=bold ctermfg=160 ctermbg=233 cterm=bold
 highlight VSWarning     guifg=#FF453A guibg=#0E0E0E gui=bold ctermfg=203 ctermbg=233 cterm=bold
+" VS Code carries the theme's italic `storage` style into storage.modifier
+" and storage.type scopes that set only a color: modifiers (static, const,
+" public, override) are italic orange, keyword types (int, struct,
+" template) italic purple.
+highlight VSModifier    guifg=#FFB638 guibg=NONE gui=italic ctermfg=215 ctermbg=NONE cterm=italic
+highlight VSTypeKeyword guifg=#A95EFF guibg=NONE gui=italic ctermfg=135 ctermbg=NONE cterm=italic
+" Java types and annotations are blue italic in VS Code: the theme's
+" `meta.class storage.type` rule, meant for JavaScript, matches them too.
+highlight VSJavaType    guifg=#28A9FF guibg=NONE gui=italic ctermfg=39  ctermbg=NONE cterm=italic
+" A docstring's quotes keep the string color but take its italic.
+highlight VSStringItalic guifg=#42DD76 guibg=NONE gui=italic ctermfg=78 ctermbg=NONE cterm=italic
+" For syntax groups that should show as plain text.  Linking them to NONE
+" would let a syntax file's `hi def link` take over again.
+highlight VSPlain       guifg=NONE    guibg=NONE gui=NONE   ctermfg=NONE ctermbg=NONE cterm=NONE
 
 " Markdown has a `text.html.markdown` root scope, so ordinary prose uses the
 " editor foreground rather than the pink variable foreground used for code.
@@ -347,12 +429,16 @@ endfunction
 
 " Standard groups shared by Vim's syntax files.
 call s:VSLink('VSComment',     'Comment SpecialComment')
-call s:VSLink('VSKeyword',     'Statement Conditional Repeat Keyword Exception StorageClass')
-call s:VSLink('VSType',        'Type Structure Typedef Title')
-call s:VSLink('VSFunction',    'Function Label Underlined')
+call s:VSLink('VSKeyword',     'Statement Conditional Repeat Keyword Exception Label')
+call s:VSLink('VSModifier',    'StorageClass')
+call s:VSLink('VSType',        'Type Typedef Title')
+call s:VSLink('VSTypeKeyword', 'Structure')
+call s:VSLink('VSFunction',    'Function Underlined')
 call s:VSLink('VSVariable',    'Identifier')
 call s:VSLink('VSString',      'String Character')
-call s:VSLink('VSConstant',    'Constant Boolean')
+" Escapes and format specifiers: VS Code's constant.character.escape and
+" constant.other.placeholder, red.  Vim's default here is #FFA500.
+call s:VSLink('VSConstant',    'Constant Boolean Special SpecialChar Debug')
 call s:VSLink('VSNumber',      'Number Float')
 call s:VSLink('VSStorage',     'PreProc Include PreCondit Define Macro Tag')
 call s:VSLink('VSPunctuation', 'Operator Delimiter')
@@ -360,49 +446,248 @@ call s:VSLink('VSTodo',        'Todo')
 call s:VSLink('VSError',       'Error ErrorMsg')
 call s:VSLink('VSWarning',     'WarningMsg')
 
-" C and C++.
-call s:VSLink('VSType',        'cType cStructure cTypedef cppType cppStructure')
-call s:VSLink('VSKeyword',     'cStatement cConditional cRepeat cStorageClass cppStatement cppAccess cppModifier cppExceptions cppStorageClass cppModule')
-call s:VSLink('VSFunction',    'cFunction cFunctionPointer cLabel cUserLabel')
-call s:VSLink('VSPunctuation', 'cOperator cppOperator cppCast cppRawStringDelimiter')
+" C and C++.  Types like wchar_t and FILE are upright; built-in types (int,
+" size_t, uint8_t), struct/union, template/typename/namespace, and access
+" specifiers are italic.  typedef, enum, class, using, and operator are
+" storage.  User labels have no color of their own in VS Code.
+call s:VSLink('VSType',        'cType cppType')
+call s:VSLink('VSTypeKeyword', 'VscCTypeKeyword cStructure cppStructure cppAccess VscCppFinal')
+call s:VSLink('VSStorage',     'cTypedef VscCStorage')
+call s:VSLink('VSKeyword',     'cStatement cConditional cRepeat cLabel cppStatement cppExceptions cppModule VscCDirective VscCCompare')
+call s:VSLink('VSModifier',    'cStorageClass cppStorageClass cppModifier VscCModifier')
+call s:VSLink('VSFunction',    'cFunction cFunctionPointer VscCMacroName VscCScope')
+call s:VSLink('VSSelf',        'VscCppThis')
+call s:VSLink('VSSource',      'cUserLabel')
+call s:VSLink('VSPunctuation', 'cOperator cppOperator cppCast cppRawStringDelimiter VscCPunct VscCHash VscCppDelete')
+" Preprocessor lines: `#` is punctuation and the directive a keyword (see
+" s:VscCSyntax()); the rest of the line is colored like code.
+call s:VSLink('VSPlain',       'cInclude cDefine cPreProc cPreCondit cPreConditMatch')
 
-" Python.
-call s:VSLink('VSKeyword',   'pythonStatement pythonConditional pythonRepeat pythonOperator pythonException pythonInclude pythonAsync')
-call s:VSLink('VSType',      'pythonClass pythonType pythonExceptions')
-call s:VSLink('VSFunction',  'pythonFunction pythonBuiltin')
-call s:VSLink('VSDecorator', 'pythonDecorator pythonDecoratorName')
-call s:VSLink('VSSelf',      'pythonClassVar')
-call s:VSLink('VSVariable',  'pythonAttribute')
+" The types VS Code's C grammar calls built in (storage.type.built-in), which
+" take the italic `storage` style.  Other types, like wchar_t and FILE, don't.
+let s:c_builtin_types = split(
+      \ 'int long short char void signed unsigned float double _Bool bool _Complex _Imaginary'
+      \ . ' size_t ssize_t off_t clock_t time_t div_t memory_order'
+      \ . ' intptr_t uintptr_t intmax_t uintmax_t u_char u_short u_int u_long u_quad_t uint ushort'
+      \ . ' quad_t blkcnt_t blksize_t caddr_t daddr_t dev_t fixpt_t gid_t id_t in_addr_t in_port_t'
+      \ . ' ino_t key_t mode_t nlink_t pid_t qaddr_t segsz_t suseconds_t swblk_t uid_t useconds_t'
+      \ . ' pthread_t pthread_attr_t pthread_cond_t pthread_condattr_t pthread_key_t'
+      \ . ' pthread_mutex_t pthread_mutexattr_t pthread_once_t pthread_rwlock_t pthread_rwlockattr_t'
+      \ . ' atomic_bool atomic_char atomic_schar atomic_uchar atomic_short atomic_ushort atomic_int'
+      \ . ' atomic_uint atomic_long atomic_ulong atomic_llong atomic_ullong atomic_char16_t'
+      \ . ' atomic_char32_t atomic_wchar_t atomic_intptr_t atomic_uintptr_t atomic_size_t'
+      \ . ' atomic_ptrdiff_t atomic_intmax_t atomic_uintmax_t')
+for s:bits in [8, 16, 32, 64]
+  for s:sign in ['int', 'uint']
+    call extend(s:c_builtin_types, [s:sign . s:bits . '_t',
+          \ s:sign . '_least' . s:bits . '_t', s:sign . '_fast' . s:bits . '_t',
+          \ 'atomic_' . s:sign . '_least' . s:bits . '_t', 'atomic_' . s:sign . '_fast' . s:bits . '_t'])
+  endfor
+endfor
 
-" Java.
-call s:VSLink('VSKeyword',   'javaBranch javaConditional javaRepeat javaExceptions javaAssert javaStorageClass javaMethodDecl javaClassDecl javaScopeDecl javaConceptKind javaStatement')
-call s:VSLink('VSType',      'javaType javaTypedef javaC_ javaI_ javaR_ javaE_ javaX_ javaLangObject')
-call s:VSLink('VSFunction',  'javaFuncDef javaMethodRef javaLambdaDef javaGenericsC1')
-call s:VSLink('VSDecorator', 'javaAnnotation javaAnnotationStart')
-call s:VSLink('VSVariable',  'javaDocParam')
-call s:VSLink('VSStorage',   'javaExternal javaDocParamTag javaDocReturnTag javaDocSeeTag javaDocThrowsTag')
-call s:VSLink('VSPunctuation', 'javaOperator')
-call s:VSLink('VSConstant',  'javaConstant javaBoolean')
-call s:VSLink('VSNumber',    'javaNumber')
+function! s:VscCSyntax() abort
+  execute 'syntax keyword VscCTypeKeyword' join(s:c_builtin_types)
+  syntax keyword VscCStorage enum
+  if &filetype ==# 'cpp'
+    syntax keyword VscCTypeKeyword auto
+    syntax keyword VscCStorage class using operator
+    syntax keyword VscCppFinal final
+    syntax keyword VscCModifier noexcept
+    syntax keyword VscCppThis this
+    syntax keyword VscCppDelete delete
+    " The std in std::vector.
+    syntax match VscCScope /\<\h\w*\ze\s*::/
+  endif
+
+  " Look-behinds, not \zs: these start after the # match ends.
+  syntax match VscCHash /^\s*\zs\%(%:\|#\)/
+        \ contained containedin=cInclude,cDefine,cPreProc,cPreCondit,cPreConditMatch
+  syntax match VscCDirective /\%(^\s*\%(%:\|#\)\s*\)\@<=\a\+/
+        \ contained containedin=cInclude,cDefine,cPreProc,cPreCondit,cPreConditMatch
+  syntax match VscCMacroName /\%(^\s*\%(%:\|#\)\s*\%(define\|undef\|ifdef\|ifndef\)\s\+\)\@<=\h\w*/
+        \ contained containedin=cDefine,cPreCondit
+
+  " Punctuation and operators, which c.vim leaves uncolored; comparisons are
+  " keyword-colored.  A / before / or * starts a comment, and a . before a
+  " digit belongs to a number.  In C++ a bare < or > is a template bracket
+  " unless it's spaced like a comparison.
+  syntax match VscCPunct "[;,()\[\]?:~^|&*%+=!<>-]\|\.\d\@!\|/[/*]\@!"
+  if &filetype ==# 'cpp'
+    syntax match VscCCompare "\s\@<=[<>]\ze\s\|[-<>]\@<![<>]=\|[=!]="
+  else
+    syntax match VscCCompare "[-<>]\@<![<>][<>]\@!=\=\|[=!]="
+  endif
+  " c.vim's block region again, so braces still fold, with colored braces.
+  syntax region cBlock matchgroup=VscCPunct start="{" end="}" transparent fold
+endfunction
+
+augroup amoled_black_shiny_c
+  autocmd!
+  autocmd FileType c,cpp call <SID>VscCSyntax()
+augroup END
+
+" Python.  and/or/not/is/in are operators, except the `in` of a for loop.
+call s:VSLink('VSKeyword',     'pythonStatement pythonConditional pythonRepeat pythonException pythonInclude pythonAsync VscPyForIn VscPyCompare')
+call s:VSLink('VSStorage',     'VscPyStorage')
+call s:VSLink('VSModifier',    'VscPyModifier')
+call s:VSLink('VSType',        'pythonClass pythonType pythonExceptions VscPyType')
+call s:VSLink('VSFunction',    'pythonFunction pythonBuiltin VscPyCall')
+call s:VSLink('VSConstant',    'VscPyConstant VscPyCaps')
+call s:VSLink('VSDecorator',   'pythonDecorator pythonDecoratorName')
+call s:VSLink('VSSelf',        'pythonClassVar')
+call s:VSLink('VSVariable',    'pythonAttribute VscPyCls')
+call s:VSLink('VSPunctuation', 'pythonOperator VscPyPunct')
+call s:VSLink('VSComment',     'VscPyDocstring')
+call s:VSLink('VSStringItalic', 'VscPyDocQuote')
+
+function! s:VscPythonSyntax() abort
+  " def, class, lambda, and async are storage; global and nonlocal are
+  " modifiers; True/False/None are constants; and the builtin types (int,
+  " str, super) are types, not functions.
+  syntax keyword VscPyStorage def nextgroup=pythonFunction skipwhite
+  syntax keyword VscPyStorage class nextgroup=pythonClass skipwhite
+  syntax keyword VscPyStorage lambda async
+  syntax keyword VscPyModifier global nonlocal
+  syntax keyword VscPyConstant True False None
+  " Only self is self-colored; cls is an ordinary variable.
+  syntax keyword VscPyCls cls
+  syntax keyword VscPyType bool bytearray bytes classmethod complex dict float frozenset
+        \ int list object property set slice staticmethod str tuple type super
+  " As in VS Code's grammar: a name starting with two capitals is a constant,
+  " and a name followed by ( is a call.
+  syntax match VscPyCaps /\<_*\u[_0-9]*\u[[:upper:][:digit:]]*\%(_\w*\)\=\>/
+  syntax match VscPyCall /\<\h\w*\ze\s*(/
+  " Punctuation and operators; comparisons are keyword-colored.  @ starts a
+  " decorator and is left alone.  A . before a name starts an attribute.
+  syntax match VscPyPunct "[()\[\]{},:;=+*/%&|^~!<>-]\|\.\%(\h\|\d\)\@!"
+  syntax match VscPyCompare "[-<>]\@<![<>][<>]\@!=\=\|[=!]="
+  syntax match VscPyPunct /\./ contained containedin=pythonAttribute
+  " The attribute rule again, so builtin names after a dot stay attributes.
+  syntax match pythonAttribute /\.\h\w*/hs=s+1 transparent contains=ALLBUT,pythonBuiltin,
+        \pythonClass,pythonFunction,pythonType,pythonAsync,VscPyStorage,VscPyModifier,VscPyConstant,VscPyType,VscPyCls
+  syntax keyword VscPyForIn in contained
+  syntax match VscPyForTarget /\%(\<for\)\@<=\s[^:]\{-}\<in\>/ transparent contains=VscPyForIn,VscPyPunct
+  " A triple-quoted string that starts a line is a docstring.
+  syntax region VscPyDocstring matchgroup=VscPyDocQuote start=/^\s*\zs[rR]\=\z('''\|"""\)/ end=/\z1/
+        \ keepend contains=pythonEscape,pythonUnicodeEscape,@Spell
+endfunction
+
+augroup amoled_black_shiny_python
+  autocmd!
+  autocmd FileType python call <SID>VscPythonSyntax()
+augroup END
+
+" Java.  Types and annotations are blue italic (see VSJavaType); `this` is
+" self-colored and `super` a variable; extends in <T extends X> a modifier.
+" Method and constructor names are blue where they are called or declared;
+" package and import paths are italic orange, and the lambda -> too.
+call s:VSLink('VSKeyword',     'javaBranch javaConditional javaRepeat javaExceptions javaAssert javaStatement VscJavaNew VscJavaCompare VscJavaDefault')
+call s:VSLink('VSModifier',    'javaStorageClass javaMethodDecl javaClassDecl javaScopeDecl javaConceptKind javaWildcardBound VscJavaImportStatic VscJavaPath VscJavaArrow')
+call s:VSLink('VSJavaType',    'javaType javaC_ javaI_ javaR_ javaE_ javaX_ javaLangObject javaGenericsC1 javaGenericsC2 javaAnnotation javaAnnotationStart')
+call s:VSLink('VSFunction',    'VscJavaCall')
+call s:VSLink('VSVariable',    'javaTypedef javaDocParam VscJavaPathStar')
+call s:VSLink('VSSelf',        'VscJavaThis')
+call s:VSLink('VSStorage',     'javaExternal javaDocParamTag javaDocReturnTag javaDocSeeTag javaDocThrowsTag VscJavaImport')
+call s:VSLink('VSPunctuation', 'javaOperator javaParen javaParen1 javaParen2 javaBlockStart javaBlockOtherStart javaGenericsCX VscJavaPunct VscJavaPathDot')
+call s:VSLink('VSConstant',    'javaConstant javaBoolean')
+call s:VSLink('VSNumber',      'javaNumber')
+
+function! s:VscJavaSyntax() abort
+  syntax keyword VscJavaThis this
+  syntax keyword VscJavaNew new
+  " Punctuation and operators; comparisons and ? : :: are keyword-colored.
+  " java.vim matches generics from their <, so a bare < or > counts only
+  " when spaced like a comparison.
+  syntax match VscJavaPunct "[;,~^|&*%+=!-]\|\.\d\@!\|/[/*]\@!"
+  syntax match VscJavaCompare "\s\@<=[<>]\ze\s\|[-<>]\@<![<>]=\|[=!]=\|[?:]"
+  " The : before an assert's message is an operator.
+  syntax match VscJavaPunct "\%(\<assert\>[^;]*\)\@80<=:"
+  syntax match VscJavaArrow "->"
+  " java.vim's region for `default:` ends at the : or ->, which the matches
+  " above take first, so it would run on and swallow a closing }.
+  syntax match VscJavaDefault "\<default\>\%(\s*\%(:\|->\)\)\@="
+  " A name before ( is a method or constructor, except a record's name and
+  " ALL_CAPS enum constants.  Keywords (if, this, super) win over it.
+  syntax match VscJavaCall "\<\%(\<record\s\+\)\@16<!\%(\u[[:upper:][:digit:]_]*\>\)\@!\K\k*\ze\s*("
+  syntax match VscJavaCall "\%(\<new\s\+\)\@8<=\u[[:upper:][:digit:]_]*\ze\s*("
+  " Package and import paths.  java.vim colors `import static` as one item;
+  " split it so static is a modifier.
+  syntax match VscJavaImport "\<import\>" nextgroup=VscJavaImportStatic,VscJavaPath skipwhite
+  syntax keyword VscJavaImport package nextgroup=VscJavaPath skipwhite
+  syntax keyword VscJavaImportStatic contained static nextgroup=VscJavaPath skipwhite
+  syntax match VscJavaPath contained "\K\k*\%(\s*\.\s*\K\k*\)*\%(\s*\.\s*\*\)\=" contains=VscJavaPathDot,VscJavaPathStar
+  syntax match VscJavaPathDot contained "\."
+  syntax match VscJavaPathStar contained "\*"
+endfunction
+
+augroup amoled_black_shiny_java
+  autocmd!
+  autocmd FileType java call <SID>VscJavaSyntax()
+augroup END
 
 " Swift (groups from Vim's bundled swift.vim).
-call s:VSLink('VSKeyword', 'swiftImport swiftKeyword swiftMultiwordKeyword swiftDefinitionModifier swiftInOutKeyword swiftFuncKeyword swiftFuncKeywordGeneral swiftFuncDefinition swiftTypeDefinition swiftMultiwordTypeDefinition swiftTypeAliasDefinition swiftVarDefinition swiftMutating swiftConstraint')
-call s:VSLink('VSType', 'swiftCoreTypes swiftType swiftTypePair swiftTypeAliasName')
-call s:VSLink('VSFunction', 'swiftTypeName swiftImportModule swiftImportComponent')
-call s:VSLink('VSVariable', 'swiftVarName swiftImplicitVarName')
-call s:VSLink('VSSelf', 'swiftIdentifierKeyword')
-call s:VSLink('VSDecorator', 'swiftAttribute')
-call s:VSLink('VSPunctuation', 'swiftOperator swiftLabel swiftCastOp swiftNilOps swiftTypeAliasValue swiftTypeDeclaration swiftTypeParameters swiftParamDelim')
+" var/let/func/init/get/class/enum and access levels are storage; struct,
+" protocol, and extension italic types; static/override/mutating and
+" attributes modifiers.  self and super are variables.
+call s:VSLink('VSKeyword', 'swiftImport swiftKeyword swiftMultiwordKeyword swiftConstraint')
+call s:VSLink('VSModifier', 'swiftDefinitionModifier swiftInOutKeyword swiftMutating swiftMultiwordTypeDefinition swiftAttribute')
+call s:VSLink('VSStorage', 'swiftFuncKeyword swiftFuncKeywordGeneral swiftFuncDefinition swiftTypeAliasDefinition swiftVarDefinition swiftLabel VscSwiftStorage')
+call s:VSLink('VSTypeKeyword', 'swiftTypeDefinition VscSwiftTypeDefinition')
+call s:VSLink('VSType', 'swiftCoreTypes swiftType swiftTypePair swiftTypeAliasName swiftImportModule swiftImportComponent VscSwiftTypeName')
+call s:VSLink('VSFunction', 'swiftTypeName')
+call s:VSLink('VSVariable', 'swiftVarName swiftImplicitVarName swiftIdentifierKeyword')
+call s:VSLink('VSPunctuation', 'swiftOperator swiftCastOp swiftNilOps swiftTypeAliasValue swiftTypeDeclaration swiftTypeParameters swiftParamDelim swiftInterpolation VscSwiftPunct')
 call s:VSLink('VSConstant', 'swiftBoolean swiftNil')
 call s:VSLink('VSNumber', 'swiftDecimal swiftHex swiftOct swiftBin swiftTupleIndexNumber')
-call s:VSLink('VSStorage', 'swiftPreproc swiftScope')
+call s:VSLink('VSKeyword', 'swiftPreproc')
+call s:VSLink('VSStorage', 'swiftScope')
+
+function! s:VscSwiftSyntax() abort
+  " The name after a type keyword is a type.  swift.vim's swiftTypeName also
+  " follows func, where it's a function name, so these get their own.
+  syntax keyword VscSwiftStorage class enum skipwhite skipempty nextgroup=VscSwiftTypeName
+  syntax keyword VscSwiftTypeDefinition struct protocol extension skipwhite skipempty nextgroup=VscSwiftTypeName
+  syntax match VscSwiftTypeName /\<[A-Za-z_][A-Za-z_0-9\.]*\>/ contained skipwhite skipempty nextgroup=swiftTypeParameters
+  syntax keyword VscSwiftStorage private fileprivate internal public open weak unowned where
+  " Parentheses and braces, which swift.vim leaves uncolored.  VS Code
+  " leaves [ ] . , : uncolored in Swift too.
+  syntax match VscSwiftPunct "[(){}]"
+endfunction
+
+augroup amoled_black_shiny_swift
+  autocmd!
+  autocmd FileType swift call <SID>VscSwiftSyntax()
+augroup END
 
 " Bash / POSIX shell.
-call s:VSLink('VSKeyword', 'shStatement shConditional shRepeat shLoop shSet bashStatement bashAdminStatement')
-call s:VSLink('VSFunction', 'shFunction shFunctionKey shFunctionName shTouchCmd')
+" Builtins (echo, cd, test, set) and commands (rm, grep) are functions;
+" return/break/continue keywords; local/export/readonly/declare/typeset
+" modifiers; quotes part of their string.
+call s:VSLink('VSKeyword', 'shConditional shRepeat shLoop VscShKeyword')
+call s:VSLink('VSFunction', 'shStatement shSet bashStatement bashAdminStatement kshStatement shFunction shFunctionName shTouchCmd')
+call s:VSLink('VSStorage', 'shFunctionKey')
+call s:VSLink('VSModifier', 'VscShModifier')
+call s:VSLink('VSTypeKeyword', 'VscShAlias')
+call s:VSLink('VSString', 'shQuote')
 call s:VSLink('VSVariable', 'shVariable shSetList shShellVariables shDeref shDerefSimple shDerefVar shPosnParm bashSpecialVariables')
 call s:VSLink('VSNumber', 'shNumber')
-call s:VSLink('VSPunctuation', 'shOperator shDerefOp shDerefDelim shRedir shSetListDelim shSubShRegion shExprRegion shBracketExprDelim')
+call s:VSLink('VSPunctuation', 'shOperator shDerefOp shDerefDelim shRedir shSetListDelim shSubShRegion shExprRegion shBracketExprDelim shTestOpr')
+
+function! s:VscShSyntax() abort
+  syntax keyword VscShKeyword return break continue
+  syntax keyword VscShModifier local export readonly declare typeset
+  syntax keyword VscShAlias alias
+  " Allow them wherever sh.vim allows its own statements.
+  for l:cluster in ['shArithParenList', 'shCaseList', 'shCommandSubList',
+        \ 'shFunctionList', 'shPPSLeftList', 'shSubShList']
+    execute 'syntax cluster' l:cluster 'add=VscShKeyword,VscShModifier,VscShAlias'
+  endfor
+endfunction
+
+augroup amoled_black_shiny_sh
+  autocmd!
+  autocmd FileType sh call <SID>VscShSyntax()
+augroup END
 
 " YAML (.yml and .yaml).  Vim leaves plain and block scalars unlinked by
 " default; VS Code scopes both as strings, so color them green here too.
@@ -412,7 +697,8 @@ call s:VSLink('VSStorage', 'yamlDirectiveName yamlTAGDirective yamlYAMLDirective
 call s:VSLink('VSString', 'yamlString yamlFlowString yamlFlowStringDelimiter yamlPlainScalar yamlBlockString')
 call s:VSLink('VSConstant', 'yamlConstant yamlNull yamlBool yamlEscape yamlSingleEscape')
 call s:VSLink('VSNumber', 'yamlInteger yamlFloat yamlTimestamp yamlYAMLVersion VscYamlBlockScalarIndent')
-call s:VSLink('VSType', 'yamlNodeTag yamlTagHandle yamlTagPrefix VscYamlAnchorName')
+call s:VSLink('VSTypeKeyword', 'yamlNodeTag yamlTagHandle yamlTagPrefix')
+call s:VSLink('VSType', 'VscYamlAnchorName')
 call s:VSLink('VSVariable', 'VscYamlAliasName')
 call s:VSLink('VSPunctuation', 'yamlDirective yamlMappingKeyStart yamlMappingMerge yamlKeyValueDelimiter yamlFlowIndicator yamlFlowMappingKeyStart yamlFlowMappingMerge yamlFlowMappingDelimiter yamlBlockMappingKeyStart yamlBlockMappingMerge yamlBlockMappingDelimiter yamlBlockCollectionItemStart VscYamlAnchorDelimiter VscYamlAliasDelimiter')
 call s:VSLink('VSSource', 'yamlDocumentStart yamlDocumentEnd yamlReservedDirective')
@@ -509,7 +795,7 @@ augroup END
 call s:VSLink('VSKeyword',     'VscAsmInstruction')
 call s:VSLink('VSVariable',    'VscAsmRegister')
 call s:VSLink('VSFunction',    'VscAsmLabel asmLabel asmIdentifier')
-call s:VSLink('VSStorage',     'asmDirective asmType asmInclude asmMacro')
+call s:VSLink('VSTypeKeyword', 'asmDirective asmType asmInclude asmMacro')
 call s:VSLink('VSKeyword',     'asmCond')
 call s:VSLink('VSPunctuation', 'VscAsmOperator')
 

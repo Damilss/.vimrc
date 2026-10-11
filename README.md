@@ -23,8 +23,8 @@ Everything lives in one tracked file, [`.vimrc`](.vimrc). `~/.vimrc` is a symlin
 | Theme | AMOLED Black Shiny palette (from the VS Code theme of the same name). Pink identifiers by default; `let g:amoled_black_shiny_pink_normal = 0` before loading switches to `#EEEEEE` |
 | Comments | Indigo italic, lifted to about 5:1 contrast |
 | Line numbers | Brighter than the theme's (`#9E9E9E`, current line bold `#EEEEEE`) so they stay readable on dim displays |
-| Syntax colors | VS Code-matching links for C/C++, Python, Java, Swift, Bash/sh, YAML, Markdown (+ embedded HTML), and RISC-V/ARM/AArch64 assembly |
-| Built-in syntax options | `g:c_functions`, `g:c_function_pointers`, `g:java_highlight_all`/`functions`/`generics`, `g:python_constant_highlight` |
+| Syntax colors | VS Code-matching colors for C/C++, Python, Java, Swift, Bash/sh, YAML, Markdown (+ embedded HTML), and RISC-V/ARM/AArch64 assembly, including punctuation and operators, VS Code's italic modifiers (`static`, `const`, `public`) and keyword types (`int`, `struct`), and Java types in blue italic as VS Code shows them |
+| Built-in syntax options | `g:c_functions`, `g:c_function_pointers`, `g:java_highlight_all`/`generics`, `g:python_constant_highlight` |
 | Markdown | Highlighted fences for c, cpp, java, python, swift, bash/shell/zsh, asm/riscv/arm/aarch64. Gray prose via `wincolor` |
 | Filetype detection | `*.yml`/`*.yaml` → yaml; `*.riscv`/`*.rv` → asm |
 | Insert mappings | `Alt-Backspace` (macOS) and `Ctrl-H` / Ctrl-Backspace (Linux) delete the previous word |
