@@ -7,8 +7,6 @@ Personal configuration for terminal Vim on macOS and Debian 13 (trixie). It incl
 - language-server C/C++ diagnostics and completion (ALE + clangd),
 - automatic closing of quotes and brackets (auto-pairs).
 
-Repository: <https://github.com/damilss/.vimrc>
-
 Everything lives in one tracked file, [`.vimrc`](.vimrc). `~/.vimrc` is a symlink to it. The plugins are optional. Without them, Vim starts normally with the theme and settings below.
 
 ## What is in the vimrc
