@@ -120,11 +120,53 @@ let g:ale_root = extend(get(g:, 'ale_root', {}),
 " VS Code does.  Elsewhere any include that needs an include path would look
 " missing, so clangd's own report is left as it is.  Includes inside #if
 " blocks are left alone: an inactive include looks the same as a missing one.
+" So are includes inside /* */ comments, which clangd ignores.
 
-" {lnum: [col, end_col, name]} for each #include outside #if blocks.  An
-" include guard (#ifndef X, then #define X) doesn't count as a block.
+" a:lines with the text of /* */ comments replaced by spaces, so columns
+" stay the same.  // comments and string or character literals are skipped
+" over, so a /* inside one doesn't start a comment.
+function! s:BlankComments(lines) abort
+  let l:in_comment = 0
+  let l:result = []
+  for l:line in a:lines
+    let l:i = 0
+    while l:i < len(l:line)
+      if l:in_comment
+        let l:from = l:i
+      else
+        let l:i = match(l:line, '/[*/]\|["'']', l:i)
+        if l:i < 0 || l:line[l:i : l:i + 1] is# '//'
+          break
+        elseif l:line[l:i] isnot# '/'
+          let l:q = l:line[l:i]
+          let l:end = matchend(l:line, l:q . '\%(\\.\|[^\\' . l:q . ']\)*' . l:q, l:i)
+          let l:i = l:end < 0 ? len(l:line) : l:end
+          continue
+        endif
+        let l:from = l:i + 2
+      endif
+      let l:end = matchend(l:line, '\*/', l:from)
+      let l:stop = l:end < 0 ? len(l:line) : l:end
+      let l:line = strpart(l:line, 0, l:i) . repeat(' ', l:stop - l:i) . strpart(l:line, l:stop)
+      let l:in_comment = l:end < 0
+      let l:i = l:stop
+    endwhile
+    call add(l:result, l:line)
+  endfor
+  return l:result
+endfunction
+
+" {lnum: [col, end_col, name]} for each #include outside #if blocks and
+" comments.  An include guard (#ifndef X, then #define X) doesn't count as a
+" block.
 function! s:IncludeLines(buffer) abort
   let l:lines = getbufline(a:buffer, 1, '$')
+  " Nothing after the last #include matters.
+  let l:after_last = match(reverse(copy(l:lines)), '^\s*#\s*include')
+  if l:after_last < 0
+    return {}
+  endif
+  let l:lines = s:BlankComments(l:lines[: -1 - l:after_last])
   let l:blocks = []
   let l:includes = {}
   for l:lnum in range(1, len(l:lines))
@@ -182,8 +224,18 @@ function! s:HasClangdConfig(buffer) abort
         \ || !empty(ale#path#FindNearestFile(a:buffer, '.clangd'))
 endfunction
 
-function! s:CheckIncludes(buffer) abort
-  if getbufvar(a:buffer, '&filetype') !~# '^c\(pp\)\=$' || !s:HasClangdConfig(a:buffer)
+" Remove the marks from a buffer that no longer gets the check, e.g. after
+" clangd is turned off for it or its compile_flags.txt is deleted.
+function! s:ClearIncludes(buffer) abort
+  if !empty(filter(copy(ale#engine#GetLoclist(a:buffer)), 'v:val.linter_name is# "includes"'))
+    call ale#other_source#ShowResults(a:buffer, 'includes', [])
+  endif
+endfunction
+
+function! s:CheckIncludes(buffer, clangd) abort
+  if !a:clangd || getbufvar(a:buffer, '&filetype') !~# '^c\(pp\)\=$'
+        \ || !s:HasClangdConfig(a:buffer)
+    call s:ClearIncludes(a:buffer)
     return
   endif
   try
@@ -203,24 +255,24 @@ endfunction
 " isn't asked a second time.
 let s:checking = get(s:, 'checking', {})
 
-" Note the buffer only if ALE checks it with clangd, so a server turned off
+" Note whether ALE checks the buffer with clangd, so a server turned off
 " with b:ale_linters, g:ale_linters_ignore, or g:ale_disable_lsp isn't
-" started.  Pick the linters now, as ALE just did: it reads b:ale_linters
-" from the current buffer, which may be another one by the time it's done.
+" started, and its old marks are cleared.  Pick the linters now, as ALE just
+" did: it reads b:ale_linters from the current buffer, which may be another
+" one by the time it's done.
 function! s:LintStarting(buffer) abort
   let l:filetype = getbufvar(a:buffer, '&filetype')
   let l:linters = ale#engine#ignore#Exclude(l:filetype, ale#linter#Get(l:filetype),
         \ ale#Var(a:buffer, 'linters_ignore'), ale#Var(a:buffer, 'disable_lsp'))
-  if index(map(l:linters, 'v:val.name'), 'clangd') >= 0
-    let s:checking[a:buffer] = 1
-  endif
+  let s:checking[a:buffer] = index(map(l:linters, 'v:val.name'), 'clangd') >= 0
 endfunction
 
+" Clearing marks fires ALELintPost from inside this loop, so skip buffers a
+" nested call has already handled.
 function! s:CheckFinished() abort
-  for l:buffer in map(keys(s:checking), 'str2nr(v:val)')
-    if !ale#engine#IsCheckingBuffer(l:buffer)
-      call remove(s:checking, l:buffer)
-      call s:CheckIncludes(l:buffer)
+  for l:buffer in keys(s:checking)
+    if has_key(s:checking, l:buffer) && !ale#engine#IsCheckingBuffer(str2nr(l:buffer))
+      call s:CheckIncludes(str2nr(l:buffer), remove(s:checking, l:buffer))
     endif
   endfor
 endfunction
