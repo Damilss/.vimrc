@@ -30,7 +30,6 @@ inoremap <C-H> <C-W>
 
 " Ask Vim's built-in syntax files for richer highlighting.
 let g:java_highlight_all = 1
-let g:java_highlight_functions = 'style'
 let g:java_highlight_generics = 1
 let g:c_functions = 1
 let g:c_function_pointers = 1
@@ -580,25 +579,45 @@ augroup END
 
 " Java.  Types and annotations are blue italic (see VSJavaType); `this` is
 " self-colored and `super` a variable; extends in <T extends X> a modifier.
-call s:VSLink('VSKeyword',     'javaBranch javaConditional javaRepeat javaExceptions javaAssert javaStatement VscJavaNew VscJavaCompare')
-call s:VSLink('VSModifier',    'javaStorageClass javaMethodDecl javaClassDecl javaScopeDecl javaConceptKind javaWildcardBound')
+" Method and constructor names are blue where they are called or declared;
+" package and import paths are italic orange, and the lambda -> too.
+call s:VSLink('VSKeyword',     'javaBranch javaConditional javaRepeat javaExceptions javaAssert javaStatement VscJavaNew VscJavaCompare VscJavaDefault')
+call s:VSLink('VSModifier',    'javaStorageClass javaMethodDecl javaClassDecl javaScopeDecl javaConceptKind javaWildcardBound VscJavaImportStatic VscJavaPath VscJavaArrow')
 call s:VSLink('VSJavaType',    'javaType javaC_ javaI_ javaR_ javaE_ javaX_ javaLangObject javaGenericsC1 javaGenericsC2 javaAnnotation javaAnnotationStart')
-call s:VSLink('VSFunction',    'javaFuncDef javaMethodRef javaLambdaDef')
-call s:VSLink('VSVariable',    'javaTypedef javaDocParam')
+call s:VSLink('VSFunction',    'VscJavaCall')
+call s:VSLink('VSVariable',    'javaTypedef javaDocParam VscJavaPathStar')
 call s:VSLink('VSSelf',        'VscJavaThis')
-call s:VSLink('VSStorage',     'javaExternal javaDocParamTag javaDocReturnTag javaDocSeeTag javaDocThrowsTag')
-call s:VSLink('VSPunctuation', 'javaOperator javaParen javaParen1 javaParen2 javaBlockStart javaBlockOtherStart javaGenericsCX VscJavaPunct')
+call s:VSLink('VSStorage',     'javaExternal javaDocParamTag javaDocReturnTag javaDocSeeTag javaDocThrowsTag VscJavaImport')
+call s:VSLink('VSPunctuation', 'javaOperator javaParen javaParen1 javaParen2 javaBlockStart javaBlockOtherStart javaGenericsCX VscJavaPunct VscJavaPathDot')
 call s:VSLink('VSConstant',    'javaConstant javaBoolean')
 call s:VSLink('VSNumber',      'javaNumber')
 
 function! s:VscJavaSyntax() abort
   syntax keyword VscJavaThis this
   syntax keyword VscJavaNew new
-  " Punctuation and operators; comparisons are keyword-colored.  java.vim
-  " matches generics from their <, so a bare < or > counts only when spaced
-  " like a comparison.
-  syntax match VscJavaPunct "[;,?:~^|&*%+=!-]\|\.\d\@!\|/[/*]\@!"
-  syntax match VscJavaCompare "\s\@<=[<>]\ze\s\|[-<>]\@<![<>]=\|[=!]="
+  " Punctuation and operators; comparisons and ? : :: are keyword-colored.
+  " java.vim matches generics from their <, so a bare < or > counts only
+  " when spaced like a comparison.
+  syntax match VscJavaPunct "[;,~^|&*%+=!-]\|\.\d\@!\|/[/*]\@!"
+  syntax match VscJavaCompare "\s\@<=[<>]\ze\s\|[-<>]\@<![<>]=\|[=!]=\|[?:]"
+  " The : before an assert's message is an operator.
+  syntax match VscJavaPunct "\%(\<assert\>[^;]*\)\@80<=:"
+  syntax match VscJavaArrow "->"
+  " java.vim's region for `default:` ends at the : or ->, which the matches
+  " above take first, so it would run on and swallow a closing }.
+  syntax match VscJavaDefault "\<default\>\%(\s*\%(:\|->\)\)\@="
+  " A name before ( is a method or constructor, except a record's name and
+  " ALL_CAPS enum constants.  Keywords (if, this, super) win over it.
+  syntax match VscJavaCall "\<\%(\<record\s\+\)\@16<!\%(\u[[:upper:][:digit:]_]*\>\)\@!\K\k*\ze\s*("
+  syntax match VscJavaCall "\%(\<new\s\+\)\@8<=\u[[:upper:][:digit:]_]*\ze\s*("
+  " Package and import paths.  java.vim colors `import static` as one item;
+  " split it so static is a modifier.
+  syntax match VscJavaImport "\<import\>" nextgroup=VscJavaImportStatic,VscJavaPath skipwhite
+  syntax keyword VscJavaImport package nextgroup=VscJavaPath skipwhite
+  syntax keyword VscJavaImportStatic contained static nextgroup=VscJavaPath skipwhite
+  syntax match VscJavaPath contained "\K\k*\%(\s*\.\s*\K\k*\)*\%(\s*\.\s*\*\)\=" contains=VscJavaPathDot,VscJavaPathStar
+  syntax match VscJavaPathDot contained "\."
+  syntax match VscJavaPathStar contained "\*"
 endfunction
 
 augroup amoled_black_shiny_java
