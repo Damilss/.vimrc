@@ -15,6 +15,9 @@
 " ---------- Core editing ----------
 filetype plugin indent on
 
+" Match VS Code's default: 4-space indents, spaces instead of tab characters.
+set tabstop=4 shiftwidth=4 softtabstop=4 expandtab
+
 set background=dark
 set number
 set cursorline
