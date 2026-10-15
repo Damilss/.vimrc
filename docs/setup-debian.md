@@ -57,7 +57,7 @@ Record the results in [implementation-status.md](implementation-status.md). Debi
 
 ## Notes
 
-- Ctrl-Backspace sends `^H` in most Linux terminals. The vimrc maps that to delete-word in Insert mode, and auto-pairs is configured not to take it over.
+- Ctrl-Backspace sends `^H` in most Linux terminals. The vimrc maps that to delete-word in Insert mode (unless Backspace also sends `^H` in your terminal, where every Backspace would delete a word), and auto-pairs is configured not to take it over.
 - clangd 19 (Debian) and Apple clangd 21 (macOS) can word some diagnostics differently. Both use the same project `compile_flags.txt`.
 - GCC may warn about things clangd doesn't, and the reverse. Always build with the real compiler.
 

@@ -24,9 +24,16 @@ if exists('+termguicolors')
 endif
 
 " Alt-Backspace deletes the previous word in Insert mode for macOS
-" Control-Backspace deletes previous word in Inser mode for linux (debian)
+" Control-Backspace deletes previous word in Insert mode for linux (debian).
+" Most Linux terminals send Ctrl-Backspace as ^H and Backspace as ^?.  Where
+" Backspace itself sends ^H (t_kb, from the tty's erase character), mapping
+" ^H would make every Backspace delete a word, so it is left alone there.
+" <C-BS> covers terminals that report Ctrl-Backspace as its own key.
 inoremap <M-BS> <C-W>
-inoremap <C-H> <C-W>
+inoremap <C-BS> <C-W>
+if !exists('&t_kb') || &t_kb !=# "\<C-H>"
+  inoremap <C-H> <C-W>
+endif
 
 " Ask Vim's built-in syntax files for richer highlighting.
 let g:java_highlight_all = 1
@@ -78,28 +85,52 @@ let g:ale_floating_preview = 1
 
 " clangd: an explicit g:ale_c_clangd_executable / g:ale_cpp_clangd_executable
 " wins; then PATH (Xcode's /usr/bin/clangd on macOS, apt's clangd on Debian);
-" then Homebrew LLVM, which is keg-only and so not on PATH.  Brew is asked at
-" most once per Vim session.
+" then Homebrew LLVM, which is keg-only and so not on PATH.  Startup only
+" checks Homebrew's usual LLVM locations.  Running brew is slow, so if those
+" miss it is asked once, when the first C/C++ buffer opens.
 function! s:FindClangd() abort
   if executable('clangd')
     return 'clangd'
   endif
-  if has('mac') && executable('brew')
-    let l:prefix = trim(system('brew --prefix llvm 2>/dev/null'))
-    if v:shell_error == 0 && executable(l:prefix . '/bin/clangd')
-      return l:prefix . '/bin/clangd'
+  for l:prefix in [$HOMEBREW_PREFIX, '/opt/homebrew', '/usr/local']
+    if !empty(l:prefix) && executable(l:prefix . '/opt/llvm/bin/clangd')
+      return l:prefix . '/opt/llvm/bin/clangd'
     endif
-  endif
+  endfor
   return ''
+endfunction
+
+function! s:UseClangd() abort
+  if !empty(s:clangd)
+    let g:ale_c_clangd_executable = get(g:, 'ale_c_clangd_executable', s:clangd)
+    let g:ale_cpp_clangd_executable = get(g:, 'ale_cpp_clangd_executable', s:clangd)
+  endif
+endfunction
+
+" Runs on FileType.  ALE only queues a lint there and reads the executable
+" when the lint starts, so the first lint already uses the result.
+function! s:AskBrewForClangd() abort
+  autocmd! vimrc_clangd_brew
+  let s:clangd_ask_brew = 0
+  let l:prefix = trim(system('brew --prefix llvm 2>/dev/null'))
+  if v:shell_error == 0 && executable(l:prefix . '/bin/clangd')
+    let s:clangd = l:prefix . '/bin/clangd'
+    call s:UseClangd()
+  endif
 endfunction
 
 if !exists('s:clangd')
   let s:clangd = s:FindClangd()
+  let s:clangd_ask_brew = empty(s:clangd) && has('mac') && executable('brew')
+        \ && !(exists('g:ale_c_clangd_executable') && exists('g:ale_cpp_clangd_executable'))
 endif
-if !empty(s:clangd)
-  let g:ale_c_clangd_executable = get(g:, 'ale_c_clangd_executable', s:clangd)
-  let g:ale_cpp_clangd_executable = get(g:, 'ale_cpp_clangd_executable', s:clangd)
-endif
+call s:UseClangd()
+augroup vimrc_clangd_brew
+  autocmd!
+  if s:clangd_ask_brew
+    autocmd FileType c,cpp call s:AskBrewForClangd()
+  endif
+augroup END
 
 " ALE only starts clangd once it finds a project root (compile_commands.json,
 " .git, Makefile, CMakeLists.txt, configure).  Without one it silently shows
@@ -137,9 +168,12 @@ function! s:BlankComments(lines) abort
         if l:i < 0 || l:line[l:i : l:i + 1] is# '//'
           break
         elseif l:line[l:i] isnot# '/'
+          " A ' inside a number is a digit separator (1'000).  A quote with
+          " no closing one (#error don't) skips only itself.
           let l:q = l:line[l:i]
-          let l:end = matchend(l:line, l:q . '\%(\\.\|[^\\' . l:q . ']\)*' . l:q, l:i)
-          let l:i = l:end < 0 ? len(l:line) : l:end
+          let l:end = l:q is# "'" && strpart(l:line, 0, l:i) =~# '\<\d\w*$' ? -1
+                \ : matchend(l:line, l:q . '\%(\\.\|[^\\' . l:q . ']\)*' . l:q, l:i)
+          let l:i = l:end < 0 ? l:i + 1 : l:end
           continue
         endif
         let l:from = l:i + 2
@@ -156,8 +190,8 @@ function! s:BlankComments(lines) abort
 endfunction
 
 " {lnum: [col, end_col, name]} for each #include outside #if blocks and
-" comments.  An include guard (#ifndef X, then #define X) doesn't count as a
-" block.
+" comments.  An include guard (#ifndef X or #if !defined(X), then #define X
+" on the next non-blank line) doesn't count as a block.
 function! s:IncludeLines(buffer) abort
   let l:lines = getbufline(a:buffer, 1, '$')
   " Nothing after the last #include matters.
@@ -173,9 +207,12 @@ function! s:IncludeLines(buffer) abort
     if l:line !~# '^\s*#'
       continue
     elseif l:line =~# '^\s*#\s*if\(n\=def\)\=\>'
-      let l:guard = matchstr(l:line, '^\s*#\s*ifndef\s\+\zs\w\+')
-      call add(l:blocks, empty(l:blocks) && !empty(l:guard)
-            \ && get(l:lines, l:lnum, '') =~# '^\s*#\s*define\s\+' . l:guard . '\>'
+      let l:guard = join(matchlist(l:line, '^\s*#\s*\%(ifndef\s\+\(\w\+\)'
+            \ . '\|if\s*!\s*defined\s*\%((\s*\(\w\+\)\s*)\|\s\(\w\+\)\)\)'
+            \ . '\s*\%(//.*\)\=$')[1 : 3], '')
+      let l:next = match(l:lines, '^\%(\s*\%(//.*\)\=$\)\@!', l:lnum)
+      call add(l:blocks, empty(l:blocks) && !empty(l:guard) && l:next >= 0
+            \ && l:lines[l:next] =~# '^\s*#\s*define\s\+' . l:guard . '\>'
             \ ? 'guard' : 'if')
     elseif l:line =~# '^\s*#\s*endif\>'
       if !empty(l:blocks)
@@ -190,9 +227,14 @@ function! s:IncludeLines(buffer) abort
   return l:includes
 endfunction
 
+" a:tick is b:changedtick when the check started, before ALE sent clangd
+" the text.  A reply about other text is dropped; a later check follows.
 function! s:ShowIncludes(buffer, tick, response) abort
   if !bufexists(a:buffer) || getbufvar(a:buffer, 'changedtick') != a:tick
-        \ || type(get(a:response, 'result')) != v:t_list
+    return
+  elseif type(get(a:response, 'result')) != v:t_list
+    " clangd failed or had no answer, so don't keep marks from before.
+    call s:ClearIncludes(a:buffer)
     return
   endif
   " Lines whose include clangd resolved, or already reported itself.
@@ -231,20 +273,46 @@ function! s:ClearIncludes(buffer) abort
   endif
 endfunction
 
-function! s:CheckIncludes(buffer, clangd) abort
-  if !a:clangd || getbufvar(a:buffer, '&filetype') !~# '^c\(pp\)\=$'
-        \ || !s:HasClangdConfig(a:buffer)
-    call s:ClearIncludes(a:buffer)
+" The documentLink request waiting for a reply for each buffer:
+" [connection, request id, tick].  A newer one replaces it.
+let s:requests = get(s:, 'requests', {})
+
+function! s:RequestLinks(buffer, tick, linter, details) abort
+  let l:conn_id = a:details.connection_id
+  let l:id = ale#lsp#Send(l:conn_id, [0, 'textDocument/documentLink',
+        \ {'textDocument': {'uri': ale#util#ToURI(expand('#' . a:buffer . ':p'))}}])
+  if l:id > 0
+    call ale#lsp#RegisterCallback(l:conn_id, function('s:OnLinks'))
+    let s:requests[a:buffer] = [l:conn_id, l:id, a:tick]
+  endif
+endfunction
+
+" ALE passes every message from clangd to every callback.
+function! s:OnLinks(conn_id, response) abort
+  if has_key(a:response, 'method')
     return
   endif
-  try
-    call ale#lsp_linter#SendRequest(a:buffer, 'clangd',
-          \ [0, 'textDocument/documentLink',
-          \  {'textDocument': {'uri': ale#util#ToURI(expand('#' . a:buffer . ':p'))}}],
-          \ function('s:ShowIncludes', [a:buffer, getbufvar(a:buffer, 'changedtick')]))
-  catch
-    " clangd isn't a linter for this buffer.
-  endtry
+  for [l:buffer, l:request] in items(s:requests)
+    if l:request[0] is# a:conn_id && l:request[1] is# get(a:response, 'id')
+      call remove(s:requests, l:buffer)
+      call s:ShowIncludes(str2nr(l:buffer), l:request[2], a:response)
+      return
+    endif
+  endfor
+endfunction
+
+" ale#lsp_linter#SendRequest() can't find clangd for a compound filetype
+" such as c.doxygen, so start it with the linter ALE picked.  An edit since
+" the check started starts another check, so don't ask about this one.
+function! s:CheckIncludes(buffer, check) abort
+  if empty(a:check.linter)
+        \ || getbufvar(a:buffer, '&filetype') !~# '\%(^\|\.\)c\%(pp\)\=\%(\.\|$\)'
+        \ || !s:HasClangdConfig(a:buffer)
+    call s:ClearIncludes(a:buffer)
+  elseif getbufvar(a:buffer, 'changedtick') == a:check.tick
+    call ale#lsp_linter#StartLSP(a:buffer, a:check.linter,
+          \ function('s:RequestLinks', [a:buffer, a:check.tick]))
+  endif
 endfunction
 
 " ALELintPost doesn't say which buffer ALE finished checking; it runs in
@@ -258,12 +326,14 @@ let s:checking = get(s:, 'checking', {})
 " with b:ale_linters, g:ale_linters_ignore, or g:ale_disable_lsp isn't
 " started, and its old marks are cleared.  Pick the linters now, as ALE just
 " did: it reads b:ale_linters from the current buffer, which may be another
-" one by the time it's done.
+" one by the time it's done.  Note b:changedtick too: ALE sends clangd the
+" text right after this, or when clangd is up if it's still starting.
 function! s:LintStarting(buffer) abort
   let l:filetype = getbufvar(a:buffer, '&filetype')
   let l:linters = ale#engine#ignore#Exclude(l:filetype, ale#linter#Get(l:filetype),
         \ ale#Var(a:buffer, 'linters_ignore'), ale#Var(a:buffer, 'disable_lsp'))
-  let s:checking[a:buffer] = index(map(l:linters, 'v:val.name'), 'clangd') >= 0
+  let s:checking[a:buffer] = {'linter': get(filter(l:linters, 'v:val.name is# "clangd"'), 0, {}),
+        \ 'tick': getbufvar(a:buffer, 'changedtick')}
 endfunction
 
 " Clearing marks fires ALELintPost from inside this loop, so skip buffers a
@@ -284,7 +354,8 @@ augroup END
 
 " auto-pairs: keep pair insertion, skipping, Backspace, and Enter, but not
 " the extra keys it would take over in terminal Vim:
-"   <C-h> is the Ctrl-Backspace mapping above.
+"   <C-h> is the Ctrl-Backspace mapping above, or Backspace where the
+"   terminal sends ^H for it.
 "   Meta keys arrive as 8-bit characters (<M-e> is 'å', <M-)> is '©'), so its
 "   Meta shortcuts would swallow those characters while typing.
 let g:AutoPairsMapCh = 0
@@ -647,7 +718,9 @@ function! s:VscSwiftSyntax() abort
   " follows func, where it's a function name, so these get their own.
   syntax keyword VscSwiftStorage class enum skipwhite skipempty nextgroup=VscSwiftTypeName
   syntax keyword VscSwiftTypeDefinition struct protocol extension skipwhite skipempty nextgroup=VscSwiftTypeName
-  syntax match VscSwiftTypeName /\<[A-Za-z_][A-Za-z_0-9\.]*\>/ contained skipwhite skipempty nextgroup=swiftTypeParameters
+  " class is also a modifier (class func, class var), and a nextgroup match
+  " beats keywords, so skip the words that can follow it as a modifier.
+  syntax match VscSwiftTypeName /\<\%(\%(func\|var\|let\|subscript\|init\|deinit\|typealias\|case\|class\|static\|final\|override\|required\|convenience\|dynamic\|lazy\|mutating\|nonmutating\|open\|public\|internal\|fileprivate\|private\|weak\|unowned\|indirect\|prefix\|postfix\|infix\|operator\)\>\)\@![A-Za-z_][A-Za-z_0-9\.]*\>/ contained skipwhite skipempty nextgroup=swiftTypeParameters
   syntax keyword VscSwiftStorage private fileprivate internal public open weak unowned where
   " Parentheses and braces, which swift.vim leaves uncolored.  VS Code
   " leaves [ ] . , : uncolored in Swift too.
@@ -718,7 +791,6 @@ endfunction
 
 augroup amoled_black_shiny_yaml
   autocmd!
-  autocmd BufRead,BufNewFile *.yml,*.yaml setfiletype yaml
   autocmd FileType yaml call <SID>VscYamlSyntax()
 augroup END
 
@@ -828,7 +900,12 @@ function! s:VscAssemblySyntax() abort
   syntax clear asmComment
   syntax region asmComment start="/\*" end="\*/" contains=asmTodo,@Spell
   syntax match asmComment "//.*$" contains=asmTodo,@Spell
-  syntax match asmComment "@.*$" contains=asmTodo,@Spell
+  " @ starts a comment only in 32-bit ARM.  Elsewhere it marks operands like
+  " `, @function` or `, @progbits` and suffixes like puts@PLT, so treat it as
+  " a comment only at line start, after a space not following a comma, or
+  " before a space.
+  syntax match asmComment "\%(^\s*\|[^,[:space:]]\s\+\)\@<=@.*$" contains=asmTodo,@Spell
+  syntax match asmComment "@\%(\s.*\)\?$" contains=asmTodo,@Spell
   syntax match asmComment "^\s*#.*$" contains=asmTodo,@Spell
   syntax match asmComment "\s\zs#\s.*$" contains=asmTodo,@Spell
 

@@ -28,12 +28,13 @@ else
 	SETUP="$REPO_DIR/scripts/setup-debian.sh"
 fi
 
-# Asks Vim, loading the tracked vimrc, to evaluate an expression.
+# Asks Vim, loading the tracked vimrc, to evaluate a string or number
+# expression, after running the Ex command $2 if given.
 vim_eval() {
 	local out status
 	out=$(mktemp "${TMPDIR:-/tmp}/vimrc-doctor.XXXXXX") || return 1
-	"$VIM_BIN" -Nu "$VIMRC_SRC" -i NONE -n -es \
-		-c "call writefile([string($1)], '$out')" -c 'qa!' </dev/null >/dev/null 2>&1
+	"$VIM_BIN" -Nu "$VIMRC_SRC" -i NONE -n -es -c "${2:-}" \
+		-c "call writefile([$1], '$out')" -c 'qa!' </dev/null >/dev/null 2>&1
 	status=$?
 	cat "$out"
 	rm -f "$out"
@@ -91,8 +92,14 @@ section 'C/C++ language server'
 if CLANGD=$(find_clangd); then
 	ok "clangd: $CLANGD ($("$CLANGD" --version 2>/dev/null | head -n 1))"
 	if command -v "$VIM_BIN" >/dev/null 2>&1; then
-		vim_clangd=$(vim_eval "get(g:, 'ale_c_clangd_executable', '')")
-		ok "vimrc gives ALE: $vim_clangd"
+		# A C buffer, since Vim may look in Homebrew only when one opens.
+		vim_clangd=$(vim_eval "get(g:, 'ale_c_clangd_executable', '')" 'setfiletype c')
+		if [ -n "$vim_clangd" ]; then
+			ok "vimrc gives ALE: $vim_clangd"
+		else
+			fail "Vim finds no clangd, though this shell found $CLANGD" \
+				"Vim may see a different PATH or miss Homebrew LLVM; set g:ale_c_clangd_executable (see docs/troubleshooting.md)"
+		fi
 	fi
 elif [ "$OS" = Darwin ]; then
 	fail 'clangd not found on PATH or in Homebrew LLVM' 'install Xcode Command Line Tools (xcode-select --install) or: brew install llvm'

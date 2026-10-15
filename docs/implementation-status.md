@@ -24,7 +24,7 @@ The original requirements are in [CLAUDE_HANDOFF.md](../CLAUDE_HANDOFF.md). This
 - **`.vimrc`:**
   - A Plugins section (vim-plug; ALE v4.0.0 and auto-pairs pinned).
   - ALE options set before load, with the linter dictionary merged using `extend(..., 'keep')`.
-  - Cached clangd discovery: override → PATH → `brew --prefix llvm`.
+  - Cached clangd discovery: override → PATH → Homebrew LLVM's usual paths → `brew --prefix llvm` (deferred to the first C/C++ buffer).
   - Buffer-local `gd`/`gr`/`K`/`]e`/`[e` in an idempotent `vimrc_ale` augroup.
   - Tab/Shift-Tab menu navigation.
   - ALE highlight links to the existing `Diagnostic*` palette.

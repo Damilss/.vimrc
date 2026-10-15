@@ -36,13 +36,20 @@ vim_has_async() {
 	case "$version" in *+timers*) ;; *) return 1 ;; esac
 }
 
-# Prints the clangd the vimrc would use: PATH first, then Homebrew LLVM.
+# Prints the clangd the vimrc would use: PATH first, then Homebrew LLVM's
+# usual locations, then wherever `brew --prefix llvm` says.
 find_clangd() {
 	local prefix
 	if command -v clangd >/dev/null 2>&1; then
 		command -v clangd
 		return 0
 	fi
+	for prefix in "${HOMEBREW_PREFIX:-}" /opt/homebrew /usr/local; do
+		if [ -n "$prefix" ] && [ -x "$prefix/opt/llvm/bin/clangd" ]; then
+			printf '%s\n' "$prefix/opt/llvm/bin/clangd"
+			return 0
+		fi
+	done
 	if [ "$(uname -s)" = Darwin ] && command -v brew >/dev/null 2>&1; then
 		prefix=$(brew --prefix llvm 2>/dev/null) || return 1
 		if [ -x "$prefix/bin/clangd" ]; then

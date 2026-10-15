@@ -37,7 +37,7 @@ Vim prints `vimrc: no C/C++ diagnostics (missing ALE plugin)` once when you open
 The message is `vimrc: no C/C++ diagnostics (missing clangd)`.
 
 - Check `command -v clangd` in the **same environment Vim starts from**. A GUI or IDE launcher may have a shorter PATH than your shell.
-- **macOS:** `/usr/bin/clangd` comes with Xcode or the Command Line Tools. If the tools are missing, run `xcode-select --install`, or `brew install llvm`. The vimrc finds Homebrew's keg-only clangd through `brew --prefix llvm` without any PATH change.
+- **macOS:** `/usr/bin/clangd` comes with Xcode or the Command Line Tools. If the tools are missing, run `xcode-select --install`, or `brew install llvm`. The vimrc finds Homebrew's keg-only clangd in its usual location (or through `brew --prefix llvm`) without any PATH change.
 - **Debian:** `sudo apt-get install clangd`.
 - To force one specific binary, add this before the vimrc's Plugins section:
 
@@ -96,7 +96,7 @@ For each file, clangd looks upward from the file's directory for `compile_comman
 
 | Symptom | Likely cause |
 | --- | --- |
-| Ctrl-Backspace deletes one character | The terminal sends `^?` instead of `^H`, so the `<C-H>` mapping never sees it. Check your terminal's key settings. auto-pairs does not map `<C-H>` in this setup |
+| Ctrl-Backspace deletes one character | The terminal sends `^?` instead of `^H`, so the `<C-H>` mapping never sees it; or Backspace also sends `^H` (`:echo strtrans(&t_kb)`), so the vimrc leaves `<C-H>` unmapped. Check your terminal's key settings. auto-pairs does not map `<C-H>` in this setup |
 | `<CR>` shows an auto-pairs mapping | Expected: auto-pairs wraps Enter in every buffer for brace expansion |
 | `gd`/`K` do Vim's default in a C file | ALE wasn't loaded when the buffer opened. Check `:ALEInfo`, then `:edit` the file again |
 | Typing `å` or `©` does something odd | Only if you re-enabled auto-pairs' Alt shortcuts (see keybindings.md) |

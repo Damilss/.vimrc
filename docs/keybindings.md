@@ -7,7 +7,7 @@ Every mapping the vimrc defines or that the plugins add, verified with `maparg()
 | Mode | Key | Action |
 | --- | --- | --- |
 | Insert | `Alt-Backspace` (`<M-BS>`) | Delete previous word (`<C-W>`), for macOS terminals |
-| Insert | `Ctrl-H` (`<C-H>`, Ctrl-Backspace on Linux) | Delete previous word (`<C-W>`) |
+| Insert | `Ctrl-H` (`<C-H>`, Ctrl-Backspace on Linux; not mapped where Backspace sends `^H`), `<C-BS>` | Delete previous word (`<C-W>`) |
 
 ## Language server (buffer-local)
 

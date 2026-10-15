@@ -108,10 +108,17 @@ call s:Add('C buffer maps gd gr K ]e [e to ALE',
       \      && maparg('K', 'n') =~# 'ALEHover' && maparg(']e', 'n') =~# 'ALENextWrap'
       \      && maparg('[e', 'n') =~# 'ALEPreviousWrap', 'gd=' . maparg('gd', 'n')]},
       \ {-> 1})
+" Ctrl-H is mapped only when Backspace (t_kb) is not ^H itself.
 call s:Add('Ctrl-H still deletes a word (not taken by auto-pairs)',
       \ {-> 0},
-      \ {-> [maparg('<C-H>', 'i', 0, 1).rhs ==# '<C-W>' && !maparg('<C-H>', 'i', 0, 1).buffer,
-      \      string(maparg('<C-H>', 'i', 0, 1))]},
+      \ {-> [&t_kb ==# "\<C-H>"
+      \      ? empty(maparg('<C-H>', 'i'))
+      \      : maparg('<C-H>', 'i', 0, 1).rhs ==# '<C-W>' && !maparg('<C-H>', 'i', 0, 1).buffer,
+      \      't_kb=' . strtrans(&t_kb) . ' ' . string(maparg('<C-H>', 'i', 0, 1))]},
+      \ {-> 1})
+call s:Add('Ctrl-Backspace key deletes a word',
+      \ {-> 0},
+      \ {-> [maparg('<C-BS>', 'i') ==# '<C-W>', string(maparg('<C-BS>', 'i', 0, 1))]},
       \ {-> 1})
 call s:Add('Enter is handled by auto-pairs',
       \ {-> 0},
@@ -243,6 +250,86 @@ call s:Add('close that file',
       \ {-> execute('bwipe!')},
       \ {-> [bufnr('') == s:main, 'buffer ' . bufnr('')]},
       \ {-> 1})
+" The ' in 1'000 is a digit separator, not a quote, so the /* after it
+" still starts a comment.  C++, where clang agrees.
+function! s:OpenDigitSeparator() abort
+  let l:dir = tempname()
+  call mkdir(l:dir, 'p')
+  call writefile(['-std=c++17'], l:dir . '/compile_flags.txt')
+  call writefile(['#include "nope1.h"', '#include "nope2.h"', 'int n = 1''000; /*',
+        \ '#include "nope3.h"', '*/'], l:dir . '/separator.cpp')
+  execute 'edit ' . fnameescape(l:dir . '/separator.cpp')
+endfunction
+call s:Add('a digit separator before a /* */ comment does not hide it',
+      \ function('s:OpenDigitSeparator'),
+      \ {-> [s:IncludeMarks() ==# [2], 'includes marks: ' . string(s:IncludeMarks())]},
+      \ {-> s:Idle() && s:HeldFor({-> !empty(s:IncludeMarks())}, 1500)}, 30000)
+" A header guard spelled #if !defined(X), with a blank line before its
+" #define, is not an #if block.  Unsaved header in examples/c.
+function! s:OpenGuardedHeader() abort
+  call execute(['bwipe!', 'edit ' . fnameescape(s:root . '/examples/c/probe.h'), 'setlocal filetype=c'])
+  call setline(1, ['#if !defined(PROBE_H)', '', '#define PROBE_H', '#include "nope1.h"',
+        \ '#include "nope2.h"', '#endif'])
+  ALELint
+endfunction
+call s:Add('includes inside an #if !defined() guard are all marked',
+      \ function('s:OpenGuardedHeader'),
+      \ {-> [!empty(s:ErrorsOn(4)) && s:IncludeMarks() ==# [5],
+      \      'includes marks: ' . string(s:IncludeMarks()) . ', loclist: ' . string(s:Loclist())]},
+      \ {-> s:Idle() && s:HeldFor({-> !empty(s:IncludeMarks())}, 1000)}, 10000)
+" ALE runs clangd for a compound filetype too.  Drop the marks first, so
+" only a new check can bring them back, and change the text, or clangd
+" sends no new results.
+call s:Add('a compound filetype (c.doxygen) gets the include check',
+      \ {-> [ale#other_source#ShowResults(bufnr(''), 'includes', []), append('$', ''),
+      \      execute(['setlocal filetype=c.doxygen', 'ALELint'])]},
+      \ {-> [&filetype is# 'c.doxygen' && s:IncludeMarks() ==# [5],
+      \      'filetype ' . &filetype . ', includes marks: ' . string(s:IncludeMarks())]},
+      \ {-> s:Idle() && s:HeldFor({-> !empty(s:IncludeMarks())}, 500)}, 10000)
+" Replies from clangd, faked: one about older text is ignored, an error or
+" null one clears the marks.
+function! s:FakeReplies() abort
+  let l:Show = function('<SNR>' . getscriptinfo({'name': '/\.vimrc$'})[0].sid . '_ShowIncludes')
+  let s:marks = []
+  for l:reply in [[-1, {'result': v:null}], [0, {'error': {'code': -32603, 'message': 'x'}}],
+        \ [0, {'result': []}], [0, {'result': v:null}]]
+    call l:Show(bufnr(''), b:changedtick + l:reply[0], l:reply[1])
+    call add(s:marks, s:IncludeMarks())
+  endfor
+endfunction
+call s:Add('an error or null documentLink reply clears the marks, a stale one does not',
+      \ function('s:FakeReplies'),
+      \ {-> [s:marks ==# [[5], [], [5], []], 'includes marks after each reply: ' . string(s:marks)]},
+      \ {-> 1})
+" An edit after ALE sent clangd the text, before its results arrive: the
+" links clangd then gives are for the old lines, so they must not be used.
+" The long lint delay holds off the check of the new text.
+function! s:EditWhileClangdWorks() abort
+  call execute(['bwipe!', 'edit ' . fnameescape(s:root . '/examples/c/stale.c')])
+  let b:ale_lint_delay = 5000
+  call setline(1, ['#include "nope1.h"', '#include <stdio.h>', '#include "nope2.h"'])
+  let s:mid_check = 0
+  let s:linted = get(b:, 'ale_linted', 0)
+  augroup smoke_stale
+    autocmd!
+    autocmd User ALELintPre ++once call timer_start(0, function('s:EditMidCheck'))
+  augroup END
+  ALELint
+endfunction
+function! s:EditMidCheck(timer) abort
+  let s:mid_check = get(b:, 'ale_linted', 0) == s:linted
+  call append(0, '')
+endfunction
+call s:Add('an edit during a check does not mark a found #include',
+      \ function('s:EditWhileClangdWorks'),
+      \ {-> [s:mid_check && getline(1) is# ''
+      \      && empty(filter(s:IncludeMarks(), 'getline(v:val) =~# "stdio"')),
+      \      'edited mid-check: ' . s:mid_check . ', includes marks: ' . string(s:IncludeMarks())]},
+      \ {-> s:Idle() && s:HeldFor({-> get(b:, 'ale_linted', 0) > 0}, 1500)}, 4500)
+call s:Add('close that file',
+      \ {-> execute(['autocmd! smoke_stale', 'bwipe!', 'buffer ' . s:main])},
+      \ {-> [bufnr('') == s:main && !&modified, 'buffer ' . bufnr('')]},
+      \ {-> 1})
 
 " ---------- Completion ----------
 function! s:CompletionWords() abort
@@ -313,6 +400,50 @@ call s:Pair('apostrophe after a letter is not paired', "i// don't", ["// don't"]
 call s:Pair('Enter between {} opens an indented block',
       \ "iint f(void) {\<CR>return 0;", ['int f(void) {', "\treturn 0;", '}'])
 call s:Pair('Tab inserts a tab when no menu is open', "i\<Tab>x", ["\tx"])
+
+" ---------- Syntax colors ----------
+" Each scratch buffer opens in a split, so wiping it returns to the scratch
+" C buffer with its window layout unchanged.
+function! s:SynAt(lnum, pat) abort
+  return synIDattr(synID(a:lnum, match(getline(a:lnum), a:pat) + 1, 1), 'name')
+endfunction
+function! s:Scratch(ext, lines) abort
+  execute 'new ' . fnameescape(tempname() . a:ext)
+  call setline(1, a:lines)
+endfunction
+
+call s:Add('open a scratch Swift buffer',
+      \ {-> [execute('let [s:scratch_c, s:scratch_wins] = [bufnr(""), winnr("$")]'),
+      \      s:Scratch('.swift', ['class func bar() {}', 'class var x: Int', 'class Foo {}'])]},
+      \ {-> [&filetype ==# 'swift', 'ft=' . &filetype]},
+      \ {-> 1})
+call s:Add('Swift keywords after class are not type names',
+      \ {-> 0},
+      \ {-> [s:SynAt(1, 'func') ==# 'swiftFuncDefinition' && s:SynAt(2, 'var') ==# 'swiftVarDefinition',
+      \      'func: ' . s:SynAt(1, 'func') . ', var: ' . s:SynAt(2, 'var')]},
+      \ {-> 1})
+call s:Add('Swift class name is a type name',
+      \ {-> 0},
+      \ {-> [s:SynAt(3, 'Foo') ==# 'VscSwiftTypeName', s:SynAt(3, 'Foo')]},
+      \ {-> 1})
+call s:Add('open a scratch assembly buffer',
+      \ {-> [execute('bwipe!'),
+      \      s:Scratch('.s', ['  .type main, @function', '  call puts@PLT', '  mov r0, r1  @ copy'])]},
+      \ {-> [&filetype ==# 'asm', 'ft=' . &filetype]},
+      \ {-> 1})
+call s:Add('asm @function and puts@PLT are not comments',
+      \ {-> 0},
+      \ {-> [s:SynAt(1, '@') !=# 'asmComment' && s:SynAt(2, '@') !=# 'asmComment',
+      \      '@function: ' . s:SynAt(1, '@') . ', @PLT: ' . s:SynAt(2, '@')]},
+      \ {-> 1})
+call s:Add('ARM @ comment is a comment',
+      \ {-> 0},
+      \ {-> [s:SynAt(3, '@') ==# 'asmComment', s:SynAt(3, '@')]},
+      \ {-> 1})
+call s:Add('closing the scratch buffers returns to the C buffer',
+      \ {-> execute('bwipe!')},
+      \ {-> [bufnr('') == s:scratch_c && winnr('$') == s:scratch_wins, 'buffer ' . bufnr('') . ', windows ' . winnr('$')]},
+      \ {-> 1})
 
 " ---------- Re-sourcing ----------
 function! s:AutocmdCount(group, pattern) abort

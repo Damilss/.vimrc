@@ -19,11 +19,11 @@ This setup uses the **Vim already on your PATH**, normally Apple's `/usr/bin/vim
 
 To use a different Vim for the scripts, set `VIMRC_VIM`, e.g. `VIMRC_VIM=/opt/homebrew/bin/vim scripts/doctor.sh`. You then launch that Vim yourself. The vimrc is the same.
 
-The vimrc picks clangd at startup, once per Vim session:
+The vimrc picks clangd once per Vim session:
 
 1. If you set `g:ale_c_clangd_executable` / `g:ale_cpp_clangd_executable` before the vimrc's Plugins section, that wins.
 2. Otherwise `clangd` on `PATH`. On macOS that is `/usr/bin/clangd` → Xcode's Apple clangd, which already knows where the macOS SDK is.
-3. Otherwise Homebrew LLVM's clangd, found with `brew --prefix llvm` (works for `/opt/homebrew` and `/usr/local`). Homebrew's LLVM is keg-only, and this setup never puts it ahead of Apple's `clang` on your PATH.
+3. Otherwise Homebrew LLVM's clangd in `$HOMEBREW_PREFIX`, `/opt/homebrew`, or `/usr/local` (`opt/llvm/bin/clangd`). Only if none exists is `brew --prefix llvm` asked, when the first C/C++ buffer opens, since brew is slow to start. Homebrew's LLVM is keg-only, and this setup never puts it ahead of Apple's `clang` on your PATH.
 
 ## Install
 
