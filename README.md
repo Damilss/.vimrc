@@ -17,11 +17,7 @@ Everything lives in one tracked file, [`.vimrc`](.vimrc). `~/.vimrc` is a symlin
 | --- | --- |
 | Filetypes | `filetype plugin indent on`, `syntax enable` |
 | Display | `number`, `cursorline`, `background=dark`, `termguicolors` (when supported) |
-<<<<<<< Updated upstream
-| Indentation | 4 spaces, matching VS Code's default (`tabstop`/`shiftwidth`/`softtabstop=4`, `expandtab`); C still uses `cindent`, and Makefiles keep real tabs |
-=======
 | Indentation | 4-space indents (`shiftwidth=4 softtabstop=4 expandtab`); literal tabs display 8 wide (`tabstop=8`). Filetype plugins (Python, YAML, Go, make) apply their own settings, and a project's `.editorconfig` overrides all of these (`packadd! editorconfig`, Vim 9.1+) |
->>>>>>> Stashed changes
 | Theme | AMOLED Black Shiny palette (from the VS Code theme of the same name). Pink identifiers by default; `let g:amoled_black_shiny_pink_normal = 0` before loading switches to `#EEEEEE` |
 | Comments | Indigo italic, lifted to about 5:1 contrast |
 | Line numbers | Brighter than the theme's (`#9E9E9E`, current line bold `#EEEEEE`) so they stay readable on dim displays |

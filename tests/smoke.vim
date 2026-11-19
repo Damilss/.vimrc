@@ -312,9 +312,6 @@ call s:Pair('character literal', "ic = 'x'", ["c = 'x'"])
 call s:Pair('apostrophe after a letter is not paired', "i// don't", ["// don't"])
 call s:Pair('Enter between {} opens an indented block',
       \ "iint f(void) {\<CR>return 0;", ['int f(void) {', '    return 0;', '}'])
-<<<<<<< Updated upstream
-call s:Pair('Tab indents 4 spaces when no menu is open', "i\<Tab>x", ['    x'])
-=======
 call s:Pair('Tab inserts an indent when no menu is open', "i\<Tab>x", ['    x'])
 
 " ---------- Syntax colors ----------
@@ -360,7 +357,6 @@ call s:Add('closing the scratch buffers returns to the C buffer',
       \ {-> execute('bwipe!')},
       \ {-> [bufnr('') == s:scratch_c && winnr('$') == s:scratch_wins, 'buffer ' . bufnr('') . ', windows ' . winnr('$')]},
       \ {-> 1})
->>>>>>> Stashed changes
 
 " ---------- Re-sourcing ----------
 function! s:AutocmdCount(group, pattern) abort
