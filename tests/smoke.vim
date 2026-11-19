@@ -312,7 +312,55 @@ call s:Pair('character literal', "ic = 'x'", ["c = 'x'"])
 call s:Pair('apostrophe after a letter is not paired', "i// don't", ["// don't"])
 call s:Pair('Enter between {} opens an indented block',
       \ "iint f(void) {\<CR>return 0;", ['int f(void) {', '    return 0;', '}'])
+<<<<<<< Updated upstream
 call s:Pair('Tab indents 4 spaces when no menu is open', "i\<Tab>x", ['    x'])
+=======
+call s:Pair('Tab inserts an indent when no menu is open', "i\<Tab>x", ['    x'])
+
+" ---------- Syntax colors ----------
+" Each scratch buffer opens in a split, so wiping it returns to the scratch
+" C buffer with its window layout unchanged.
+function! s:SynAt(lnum, pat) abort
+  return synIDattr(synID(a:lnum, match(getline(a:lnum), a:pat) + 1, 1), 'name')
+endfunction
+function! s:Scratch(ext, lines) abort
+  execute 'new ' . fnameescape(tempname() . a:ext)
+  call setline(1, a:lines)
+endfunction
+
+call s:Add('open a scratch Swift buffer',
+      \ {-> [execute('let [s:scratch_c, s:scratch_wins] = [bufnr(""), winnr("$")]'),
+      \      s:Scratch('.swift', ['class func bar() {}', 'class var x: Int', 'class Foo {}'])]},
+      \ {-> [&filetype ==# 'swift', 'ft=' . &filetype]},
+      \ {-> 1})
+call s:Add('Swift keywords after class are not type names',
+      \ {-> 0},
+      \ {-> [s:SynAt(1, 'func') ==# 'swiftFuncDefinition' && s:SynAt(2, 'var') ==# 'swiftVarDefinition',
+      \      'func: ' . s:SynAt(1, 'func') . ', var: ' . s:SynAt(2, 'var')]},
+      \ {-> 1})
+call s:Add('Swift class name is a type name',
+      \ {-> 0},
+      \ {-> [s:SynAt(3, 'Foo') ==# 'VscSwiftTypeName', s:SynAt(3, 'Foo')]},
+      \ {-> 1})
+call s:Add('open a scratch assembly buffer',
+      \ {-> [execute('bwipe!'),
+      \      s:Scratch('.s', ['  .type main, @function', '  call puts@PLT', '  mov r0, r1  @ copy'])]},
+      \ {-> [&filetype ==# 'asm', 'ft=' . &filetype]},
+      \ {-> 1})
+call s:Add('asm @function and puts@PLT are not comments',
+      \ {-> 0},
+      \ {-> [s:SynAt(1, '@') !=# 'asmComment' && s:SynAt(2, '@') !=# 'asmComment',
+      \      '@function: ' . s:SynAt(1, '@') . ', @PLT: ' . s:SynAt(2, '@')]},
+      \ {-> 1})
+call s:Add('ARM @ comment is a comment',
+      \ {-> 0},
+      \ {-> [s:SynAt(3, '@') ==# 'asmComment', s:SynAt(3, '@')]},
+      \ {-> 1})
+call s:Add('closing the scratch buffers returns to the C buffer',
+      \ {-> execute('bwipe!')},
+      \ {-> [bufnr('') == s:scratch_c && winnr('$') == s:scratch_wins, 'buffer ' . bufnr('') . ', windows ' . winnr('$')]},
+      \ {-> 1})
+>>>>>>> Stashed changes
 
 " ---------- Re-sourcing ----------
 function! s:AutocmdCount(group, pattern) abort

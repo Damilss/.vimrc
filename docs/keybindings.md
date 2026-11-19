@@ -62,7 +62,7 @@ let g:ale_cpp_clangd_options = '--header-insertion=never'
 | Insert | `(` `[` `{` `"` `'` `` ` `` | Insert the pair, cursor between |
 | Insert | `)` `]` `}` `"` `'` | If the next character is that closer, move past it instead of inserting another |
 | Insert | `Backspace` | Between an empty pair, delete both |
-| Insert | `Enter` | Between `{}`, put `}` on its own line and indent the cursor line using your indent settings (C: `cindent`, one tab) |
+| Insert | `Enter` | Between `{}`, put `}` on its own line and indent the cursor line using your indent settings (C: `cindent`, 4 spaces) |
 | Insert | `Space` | Between a pair, insert a space on both sides: `( | )` |
 
 Quotes are not paired after a letter or digit (`don't` stays `don't`). An escaped quote (`\"`) inside a string is inserted literally.

@@ -1,0 +1,26 @@
+// VS Code keybindings that port this vimrc to VS Code + VSCodeVim.
+// Copy to ~/Library/Application Support/Code/User/keybindings.json.  See docs/vscode.md.
+[
+    // Completion menu: Tab/S-Tab cycle, C-y accept, C-e close, C-n/C-p start with nothing selected
+    { "key": "tab",       "command": "selectNextSuggestion",     "when": "suggestWidgetVisible && editorTextFocus && vim.active && (!inSnippetMode || suggestWidgetHasFocusedSuggestion)" },
+    { "key": "shift+tab", "command": "selectLastSuggestion",     "when": "suggestWidgetVisible && editorTextFocus && vim.active && !suggestWidgetHasFocusedSuggestion && !inSnippetMode" },
+    { "key": "shift+tab", "command": "selectPrevSuggestion",     "when": "suggestWidgetVisible && editorTextFocus && vim.active && suggestWidgetHasFocusedSuggestion" },
+    { "key": "ctrl+y",    "command": "acceptSelectedSuggestion", "when": "suggestWidgetVisible && editorTextFocus && vim.active && suggestWidgetHasFocusedSuggestion" },
+    { "key": "ctrl+y",    "command": "hideSuggestWidget",        "when": "suggestWidgetVisible && editorTextFocus && vim.active && !suggestWidgetHasFocusedSuggestion" },
+    { "key": "ctrl+e",    "command": "hideSuggestWidget",        "when": "suggestWidgetVisible && editorTextFocus && vim.active" },
+    { "key": "ctrl+p",    "command": "selectLastSuggestion",     "when": "suggestWidgetVisible && editorTextFocus && vim.active && !suggestWidgetHasFocusedSuggestion" },
+    { "key": "ctrl+n",    "command": "editor.action.triggerSuggest", "args": { "auto": true }, "when": "editorTextFocus && vim.active && vim.mode == 'Insert' && !suggestWidgetVisible && !inDebugRepl" },
+    { "key": "ctrl+p",    "command": "editor.action.triggerSuggest", "args": { "auto": true }, "when": "editorTextFocus && vim.active && vim.mode == 'Insert' && !suggestWidgetVisible && !inDebugRepl" },
+    // Vim's Tab already inserted the match, so Enter keeps it and adds a newline.
+    // If this ever misbehaves, delete it: Enter then always inserts a plain newline.
+    { "key": "enter", "command": "runCommands", "when": "suggestWidgetVisible && suggestWidgetHasFocusedSuggestion && editorTextFocus && vim.active && vim.mode == 'Insert' && !inDebugRepl",
+      "args": { "commands": ["acceptSelectedSuggestion", { "command": "type", "args": { "text": "\n" } }] } },
+    // inoremap <M-BS> / <C-BS> / <C-H> <C-W>
+    { "key": "alt+backspace",  "command": "vim.remap", "when": "editorTextFocus && vim.active && vim.mode == 'Insert' && !inDebugRepl", "args": { "after": ["<C-w>"] } },
+    { "key": "ctrl+backspace", "command": "vim.remap", "when": "editorTextFocus && vim.active && vim.mode == 'Insert' && !inDebugRepl", "args": { "after": ["<C-w>"] } },
+    { "key": "ctrl+h",         "command": "vim.remap", "when": "editorTextFocus && vim.active && vim.mode == 'Insert' && !inDebugRepl", "args": { "after": ["<C-w>"] } },
+    // gr list like ALE's preview: Enter opens and closes, t opens to the side, q closes (j/k already work via VSCodeVim)
+    { "key": "enter", "command": "openReference",        "when": "referenceSearchVisible && listFocus && !inputFocus && !treeElementCanCollapse && !treeElementCanExpand" },
+    { "key": "t",     "command": "openReferenceToSide",  "when": "referenceSearchVisible && listFocus && !inputFocus && !treeElementCanCollapse && !treeElementCanExpand" },
+    { "key": "q",     "command": "closeReferenceSearch", "when": "referenceSearchVisible && listFocus && !inputFocus" }
+]

@@ -1,0 +1,91 @@
+// VS Code user settings that port this vimrc to VS Code + VSCodeVim.
+// Merge these keys into ~/Library/Application Support/Code/User/settings.json
+// (user settings, not a workspace .vscode/settings.json: VSCodeVim's key
+// bindings are application-scoped).  See docs/vscode.md.
+{
+    // VSCodeVim draws the ':' command line, '/' search text, the mode and
+    // pending keys (showcmd) in the status bar.
+    "workbench.statusBar.visible": true,
+
+    // ---------- Vim port (see ~/projects/vsprojects/.vimrc/docs/vscode.md) ----------
+    // gd = VSCodeVim default. ":mark '" lets Ctrl-O come back (ALE does m`). ]e/[e only move the cursor,
+    // and Error Lens shows the message, like ALE's virtual text.
+    "vim.normalModeKeyBindingsNonRecursive": [
+        { "before": ["K"],      "commands": ["editor.action.showHover"], "silent": true },
+        { "before": ["g", "r"], "commands": [":mark '", "editor.action.referenceSearch.trigger"], "silent": true },
+        { "before": ["]", "e"], "commands": [":mark '", "editor.action.marker.next", "closeMarkersNavigation"], "silent": true },
+        { "before": ["[", "e"], "commands": [":mark '", "editor.action.marker.prev", "closeMarkersNavigation"], "silent": true }
+    ],
+    "problems.sortOrder": "position",
+    // Search / IncSearch colours
+    "vim.searchHighlightColor": "#FFB638",
+    "vim.searchHighlightTextColor": "#0E0E0E",
+    "vim.searchMatchColor": "#FF478D",
+    "vim.searchMatchTextColor": "#0E0E0E",
+    // completeopt=menuone,noinsert,noselect; Enter on an unselected menu = newline
+    "editor.suggest.selectionMode": "never",
+    "editor.acceptSuggestionOnEnter": "off",
+    "editor.tabCompletion": "off",
+    // auto-pairs: skip/delete any closer, not only VS Code-inserted ones
+    "editor.autoClosingOvertype": "always",
+    "editor.autoClosingDelete": "always",
+    // Indentation: 4 spaces, per-file detection on; a project's .editorconfig still wins
+    "editor.tabSize": 4,
+    "editor.insertSpaces": true,
+    "editor.detectIndentation": true,
+    // vimrc colour tweaks on top of the same theme
+    "editor.renderLineHighlight": "all",
+    "workbench.colorCustomizations": {
+        "[AMOLED Black Shiny]": {
+            "editorLineNumber.foreground": "#9E9E9E",
+            "editorLineNumber.activeForeground": "#EEEEEE",
+            "editorBracketMatch.foreground": "#FFFFFF",
+            "editorInfo.foreground": "#6CC7F6",
+            "errorLens.errorForeground": "#E1270E",
+            "errorLens.warningForeground": "#FF453A",
+            "errorLens.infoForeground": "#6CC7F6",
+            "errorLens.hintForeground": "#5BC266"
+        }
+    },
+    "editor.tokenColorCustomizations": {
+        "[AMOLED Black Shiny]": {
+            "textMateRules": [
+                {
+                    "scope": [
+                        "comment",
+                        "punctuation.definition.comment",
+                        "string.quoted.docstring.multi",
+                        "string.quoted.docstring.raw.multi",
+                        "comment.block.documentation source"
+                    ],
+                    "settings": { "foreground": "#7F7EC0", "fontStyle": "italic" }
+                },
+                { "scope": "markup.inserted", "settings": { "foreground": "#5BC266" } },
+                { "scope": "markup.changed", "settings": { "foreground": "#FBCC43" } },
+                { "scope": "markup.deleted", "settings": { "foreground": "#E1270E" } },
+                { "scope": "markup.strikethrough", "settings": { "fontStyle": "strikethrough" } }
+            ]
+        }
+    },
+    "files.associations": {
+        "*.riscv": "riscv",
+        "*.rv": "riscv"
+    },
+    // ALE parity: current-line virtual text, sign column, echo line in the status bar
+    "errorLens.followCursor": "activeLine",
+    "errorLens.messageTemplate": "[$source] $severity: $message",
+    "errorLens.severityText": ["Error", "Warning", "Info", "Hint"],
+    "errorLens.messageBackgroundMode": "none",
+    "errorLens.gutterIconsEnabled": true,
+    "errorLens.gutterIconsFollowCursorOverride": true,
+    "errorLens.gutterIconSet": "letter",
+    "errorLens.errorGutterIconColor": "#E1270E",
+    "errorLens.warningGutterIconColor": "#FF453A",
+    "errorLens.infoGutterIconColor": "#6CC7F6",
+    "errorLens.statusBarMessageEnabled": true,
+    "errorLens.statusBarMessageType": "activeCursor",
+    "errorLens.statusBarMessageTemplate": "[$source] $severity: $message",
+    // The same Homebrew binaries ALE ran
+    "ruff.path": ["/opt/homebrew/bin/ruff"],
+    "shellcheck.executablePath": "/opt/homebrew/bin/shellcheck"
+}
