@@ -398,8 +398,8 @@ call s:Pair('escaped quote inside a string', 'i"a\"b"', ['"a\"b"'])
 call s:Pair('character literal', "ic = 'x'", ["c = 'x'"])
 call s:Pair('apostrophe after a letter is not paired', "i// don't", ["// don't"])
 call s:Pair('Enter between {} opens an indented block',
-      \ "iint f(void) {\<CR>return 0;", ['int f(void) {', "\treturn 0;", '}'])
-call s:Pair('Tab inserts a tab when no menu is open', "i\<Tab>x", ["\tx"])
+      \ "iint f(void) {\<CR>return 0;", ['int f(void) {', '    return 0;', '}'])
+call s:Pair('Tab inserts an indent when no menu is open', "i\<Tab>x", ['    x'])
 
 " ---------- Syntax colors ----------
 " Each scratch buffer opens in a split, so wiping it returns to the scratch

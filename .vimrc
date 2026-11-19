@@ -15,6 +15,14 @@
 " ---------- Core editing ----------
 filetype plugin indent on
 
+" Indent with 4 spaces; literal tabs still display 8 wide like other Unix
+" tools.  Filetype plugins (Python, YAML, Go, make) apply their own settings.
+set tabstop=8 shiftwidth=4 softtabstop=4 expandtab
+
+" A project's .editorconfig overrides the defaults above.  The package ships
+" with Vim 9.1+; on older Vims this is a silent no-op.
+silent! packadd! editorconfig
+
 set background=dark
 set number
 set cursorline
