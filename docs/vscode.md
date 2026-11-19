@@ -32,6 +32,13 @@ What was checked, and how: every setting key and value was checked against the i
 
 5. Keep `"C_Cpp.intelliSenseEngine": "disabled"`. cpptools stays installed for its debugger. Any other value gives duplicate C/C++ diagnostics and completions alongside clangd.
 
+6. **C block comments.** Copy `vscode/comment-continuation` to
+   `~/.vscode/extensions/emilio-local.c-comment-continuation-0.1.0`, then run
+   **Developer: Reload Window**. This local extension adds ` * ` when pressing
+   Enter inside `/* ... */` or `/** ... */` in C/C++/CUDA, including VSCodeVim's
+   `o` command. It works with clangd and has no executable code or dependencies.
+   Keep `editor.autoIndent` at `advanced` or `full` (the default).
+
 ## Keys
 
 ### Language server
@@ -73,9 +80,9 @@ Both wrap within the file. `"problems.sortOrder": "position"` makes them walk in
 | Insert | `Ctrl-Y` | accept the highlighted item (or just close the menu if nothing is highlighted) | VSCodeVim: copy the character from the line above |
 | Insert | `Ctrl-E` | close the menu and keep what you typed | VSCodeVim: copy the character from the line below |
 | Insert | `Ctrl-N` / `Ctrl-P` | next / previous | open the menu with nothing selected |
-| Insert | `Enter` | newline; if an item is highlighted, accept it *and* add a newline *(test)* | newline |
+| Insert | `Enter` | accept the highlighted item without adding a newline; newline if nothing is selected | newline |
 
-Settings: `"editor.suggest.selectionMode": "never"` (noselect), `"editor.acceptSuggestionOnEnter": "off"`, `"editor.tabCompletion": "off"`. The completion rules apply only in real editors with VSCodeVim on (`editorTextFocus && vim.active`), so the chat input, commit box, and debug console keep VS Code's usual keys.
+Settings: `"editor.suggest.selectionMode": "never"` (noselect), `"editor.acceptSuggestionOnEnter": "on"`, `"editor.tabCompletion": "off"`. Tab cycling and the other Vim completion shortcuts apply in real editors with VSCodeVim on (`editorTextFocus && vim.active`). Enter accepts a highlighted suggestion in the editor whether Vim is active or inactive, without adding a newline; with nothing selected it inserts a newline.
 
 ### Insert-mode delete word
 
@@ -141,6 +148,7 @@ All colour overrides are scoped to `"[AMOLED Black Shiny]"`, so switching themes
 - **Global, not buffer-local.** The vimrc defines `gd`/`gr`/`K` only in C/C++/Python buffers and `]e`/`[e` only where ALE lints. VSCodeVim remaps can't be limited to a filetype. Where no language provider exists, `gd`/`K` do nothing: there's no text-search `gd` and no `K` → `man` fallback.
 - **Completion model.** In Vim, Tab/Ctrl-N *insert* the match, so typing on keeps it. In VS Code the item is only highlighted: you accept with Ctrl-Y, Enter, or a commit character such as `(`, and typing a space or letter drops it. Docs don't pop up by themselves: press Ctrl-Space once on a highlighted item, and the details pane stays open from then on.
 - **Pairing.** auto-pairs paired quotes and backticks in every filetype, plus `"""`, `'''` and ```` ``` ````. VS Code pairs only what each language defines (Markdown gets no quotes or backticks). Space inside a pair (`( | )`) and skipping over spaces before a closer aren't available.
+- **Opening above a comment line.** The local C comment extension supports Enter and `o`. VSCodeVim's `O` can strip the comment leader while adjusting indentation; use Enter or `o` to continue the comment.
 - **Every missing `#include`.** clangd stops at the first missing header, because the error is fatal. The vimrc's extra check has no VS Code setting and would need a small extension.
 - **Linter names.** `$source` is what each server reports (`clang`, `Ruff`, `Pylance`, `shellcheck`), not ALE's linter names. There's no lint-on-InsertLeave; servers re-check on every change.
 - **Smaller ones.** TODO/FIXME/XXX are highlighted only in Python comments. The jumplist is shared by all editor groups ([VSCodeVim #8914](https://github.com/VSCodeVim/Vim/issues/8914)). The current line number can't be bold. ARM `.s` files open as RISC-V. Asm fences in Markdown aren't highlighted. `gd` has no open-in-tab form.
@@ -153,7 +161,7 @@ If an item marked *test* misbehaves:
 | --- | --- |
 | `gr`, `]e` or `[e` acts oddly | remove `":mark '", ` from that entry in `vim.normalModeKeyBindingsNonRecursive` |
 | `]e`/`[e` move but don't land on the problem | remove `"closeMarkersNavigation"` from the entry; you then get VS Code's problem peek under the line (Esc closes it) |
-| Enter after Tab does something strange | delete the `enter` → `runCommands` rule; Enter then always inserts a plain newline |
+| Enter after Tab does something strange | delete the Insert-mode `enter` → `acceptSelectedSuggestion` rule; Enter then always inserts a plain newline |
 | Alt-Backspace misbehaves | delete the `alt+backspace` rule; VS Code's own `deleteWordLeft` takes over |
 
 To undo everything, restore the `settings.json.backup.*` file next to `settings.json`, delete `keybindings.json`, and run the `defaults delete` command above.

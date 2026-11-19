@@ -1,0 +1,2096 @@
+{
+    "onEnterRules": [
+        {
+            "beforeText": "^\\s*/\\*(?!/)([^*]|\\*(?!/))*$",
+            "afterText": "^\\s*\\*/$",
+            "action": {
+                "indent": "indentOutdent",
+                "appendText": " * "
+            }
+        },
+        {
+            "beforeText": "^\\s*/\\*(?!/)([^*]|\\*(?!/))*$",
+            "action": {
+                "indent": "none",
+                "appendText": " * "
+            }
+        },
+        {
+            "previousLineText": "^\\s*(/\\*|\\*(?!/)).*$",
+            "beforeText": "^[\\t ]* \\* {256}(?![\\t ])([^*]|\\*(?!/))*$",
+            "action": {
+                "indent": "none",
+                "appendText": "*                                                                                                                                                                                                                                                                "
+            }
+        },
+        {
+            "previousLineText": "^\\s*(/\\*|\\*(?!/)).*$",
+            "beforeText": "^[\\t ]* \\* {255}(?![\\t ])([^*]|\\*(?!/))*$",
+            "action": {
+                "indent": "none",
+                "appendText": "*                                                                                                                                                                                                                                                               "
+            }
+        },
+        {
+            "previousLineText": "^\\s*(/\\*|\\*(?!/)).*$",
+            "beforeText": "^[\\t ]* \\* {254}(?![\\t ])([^*]|\\*(?!/))*$",
+            "action": {
+                "indent": "none",
+                "appendText": "*                                                                                                                                                                                                                                                              "
+            }
+        },
+        {
+            "previousLineText": "^\\s*(/\\*|\\*(?!/)).*$",
+            "beforeText": "^[\\t ]* \\* {253}(?![\\t ])([^*]|\\*(?!/))*$",
+            "action": {
+                "indent": "none",
+                "appendText": "*                                                                                                                                                                                                                                                             "
+            }
+        },
+        {
+            "previousLineText": "^\\s*(/\\*|\\*(?!/)).*$",
+            "beforeText": "^[\\t ]* \\* {252}(?![\\t ])([^*]|\\*(?!/))*$",
+            "action": {
+                "indent": "none",
+                "appendText": "*                                                                                                                                                                                                                                                            "
+            }
+        },
+        {
+            "previousLineText": "^\\s*(/\\*|\\*(?!/)).*$",
+            "beforeText": "^[\\t ]* \\* {251}(?![\\t ])([^*]|\\*(?!/))*$",
+            "action": {
+                "indent": "none",
+                "appendText": "*                                                                                                                                                                                                                                                           "
+            }
+        },
+        {
+            "previousLineText": "^\\s*(/\\*|\\*(?!/)).*$",
+            "beforeText": "^[\\t ]* \\* {250}(?![\\t ])([^*]|\\*(?!/))*$",
+            "action": {
+                "indent": "none",
+                "appendText": "*                                                                                                                                                                                                                                                          "
+            }
+        },
+        {
+            "previousLineText": "^\\s*(/\\*|\\*(?!/)).*$",
+            "beforeText": "^[\\t ]* \\* {249}(?![\\t ])([^*]|\\*(?!/))*$",
+            "action": {
+                "indent": "none",
+                "appendText": "*                                                                                                                                                                                                                                                         "
+            }
+        },
+        {
+            "previousLineText": "^\\s*(/\\*|\\*(?!/)).*$",
+            "beforeText": "^[\\t ]* \\* {248}(?![\\t ])([^*]|\\*(?!/))*$",
+            "action": {
+                "indent": "none",
+                "appendText": "*                                                                                                                                                                                                                                                        "
+            }
+        },
+        {
+            "previousLineText": "^\\s*(/\\*|\\*(?!/)).*$",
+            "beforeText": "^[\\t ]* \\* {247}(?![\\t ])([^*]|\\*(?!/))*$",
+            "action": {
+                "indent": "none",
+                "appendText": "*                                                                                                                                                                                                                                                       "
+            }
+        },
+        {
+            "previousLineText": "^\\s*(/\\*|\\*(?!/)).*$",
+            "beforeText": "^[\\t ]* \\* {246}(?![\\t ])([^*]|\\*(?!/))*$",
+            "action": {
+                "indent": "none",
+                "appendText": "*                                                                                                                                                                                                                                                      "
+            }
+        },
+        {
+            "previousLineText": "^\\s*(/\\*|\\*(?!/)).*$",
+            "beforeText": "^[\\t ]* \\* {245}(?![\\t ])([^*]|\\*(?!/))*$",
+            "action": {
+                "indent": "none",
+                "appendText": "*                                                                                                                                                                                                                                                     "
+            }
+        },
+        {
+            "previousLineText": "^\\s*(/\\*|\\*(?!/)).*$",
+            "beforeText": "^[\\t ]* \\* {244}(?![\\t ])([^*]|\\*(?!/))*$",
+            "action": {
+                "indent": "none",
+                "appendText": "*                                                                                                                                                                                                                                                    "
+            }
+        },
+        {
+            "previousLineText": "^\\s*(/\\*|\\*(?!/)).*$",
+            "beforeText": "^[\\t ]* \\* {243}(?![\\t ])([^*]|\\*(?!/))*$",
+            "action": {
+                "indent": "none",
+                "appendText": "*                                                                                                                                                                                                                                                   "
+            }
+        },
+        {
+            "previousLineText": "^\\s*(/\\*|\\*(?!/)).*$",
+            "beforeText": "^[\\t ]* \\* {242}(?![\\t ])([^*]|\\*(?!/))*$",
+            "action": {
+                "indent": "none",
+                "appendText": "*                                                                                                                                                                                                                                                  "
+            }
+        },
+        {
+            "previousLineText": "^\\s*(/\\*|\\*(?!/)).*$",
+            "beforeText": "^[\\t ]* \\* {241}(?![\\t ])([^*]|\\*(?!/))*$",
+            "action": {
+                "indent": "none",
+                "appendText": "*                                                                                                                                                                                                                                                 "
+            }
+        },
+        {
+            "previousLineText": "^\\s*(/\\*|\\*(?!/)).*$",
+            "beforeText": "^[\\t ]* \\* {240}(?![\\t ])([^*]|\\*(?!/))*$",
+            "action": {
+                "indent": "none",
+                "appendText": "*                                                                                                                                                                                                                                                "
+            }
+        },
+        {
+            "previousLineText": "^\\s*(/\\*|\\*(?!/)).*$",
+            "beforeText": "^[\\t ]* \\* {239}(?![\\t ])([^*]|\\*(?!/))*$",
+            "action": {
+                "indent": "none",
+                "appendText": "*                                                                                                                                                                                                                                               "
+            }
+        },
+        {
+            "previousLineText": "^\\s*(/\\*|\\*(?!/)).*$",
+            "beforeText": "^[\\t ]* \\* {238}(?![\\t ])([^*]|\\*(?!/))*$",
+            "action": {
+                "indent": "none",
+                "appendText": "*                                                                                                                                                                                                                                              "
+            }
+        },
+        {
+            "previousLineText": "^\\s*(/\\*|\\*(?!/)).*$",
+            "beforeText": "^[\\t ]* \\* {237}(?![\\t ])([^*]|\\*(?!/))*$",
+            "action": {
+                "indent": "none",
+                "appendText": "*                                                                                                                                                                                                                                             "
+            }
+        },
+        {
+            "previousLineText": "^\\s*(/\\*|\\*(?!/)).*$",
+            "beforeText": "^[\\t ]* \\* {236}(?![\\t ])([^*]|\\*(?!/))*$",
+            "action": {
+                "indent": "none",
+                "appendText": "*                                                                                                                                                                                                                                            "
+            }
+        },
+        {
+            "previousLineText": "^\\s*(/\\*|\\*(?!/)).*$",
+            "beforeText": "^[\\t ]* \\* {235}(?![\\t ])([^*]|\\*(?!/))*$",
+            "action": {
+                "indent": "none",
+                "appendText": "*                                                                                                                                                                                                                                           "
+            }
+        },
+        {
+            "previousLineText": "^\\s*(/\\*|\\*(?!/)).*$",
+            "beforeText": "^[\\t ]* \\* {234}(?![\\t ])([^*]|\\*(?!/))*$",
+            "action": {
+                "indent": "none",
+                "appendText": "*                                                                                                                                                                                                                                          "
+            }
+        },
+        {
+            "previousLineText": "^\\s*(/\\*|\\*(?!/)).*$",
+            "beforeText": "^[\\t ]* \\* {233}(?![\\t ])([^*]|\\*(?!/))*$",
+            "action": {
+                "indent": "none",
+                "appendText": "*                                                                                                                                                                                                                                         "
+            }
+        },
+        {
+            "previousLineText": "^\\s*(/\\*|\\*(?!/)).*$",
+            "beforeText": "^[\\t ]* \\* {232}(?![\\t ])([^*]|\\*(?!/))*$",
+            "action": {
+                "indent": "none",
+                "appendText": "*                                                                                                                                                                                                                                        "
+            }
+        },
+        {
+            "previousLineText": "^\\s*(/\\*|\\*(?!/)).*$",
+            "beforeText": "^[\\t ]* \\* {231}(?![\\t ])([^*]|\\*(?!/))*$",
+            "action": {
+                "indent": "none",
+                "appendText": "*                                                                                                                                                                                                                                       "
+            }
+        },
+        {
+            "previousLineText": "^\\s*(/\\*|\\*(?!/)).*$",
+            "beforeText": "^[\\t ]* \\* {230}(?![\\t ])([^*]|\\*(?!/))*$",
+            "action": {
+                "indent": "none",
+                "appendText": "*                                                                                                                                                                                                                                      "
+            }
+        },
+        {
+            "previousLineText": "^\\s*(/\\*|\\*(?!/)).*$",
+            "beforeText": "^[\\t ]* \\* {229}(?![\\t ])([^*]|\\*(?!/))*$",
+            "action": {
+                "indent": "none",
+                "appendText": "*                                                                                                                                                                                                                                     "
+            }
+        },
+        {
+            "previousLineText": "^\\s*(/\\*|\\*(?!/)).*$",
+            "beforeText": "^[\\t ]* \\* {228}(?![\\t ])([^*]|\\*(?!/))*$",
+            "action": {
+                "indent": "none",
+                "appendText": "*                                                                                                                                                                                                                                    "
+            }
+        },
+        {
+            "previousLineText": "^\\s*(/\\*|\\*(?!/)).*$",
+            "beforeText": "^[\\t ]* \\* {227}(?![\\t ])([^*]|\\*(?!/))*$",
+            "action": {
+                "indent": "none",
+                "appendText": "*                                                                                                                                                                                                                                   "
+            }
+        },
+        {
+            "previousLineText": "^\\s*(/\\*|\\*(?!/)).*$",
+            "beforeText": "^[\\t ]* \\* {226}(?![\\t ])([^*]|\\*(?!/))*$",
+            "action": {
+                "indent": "none",
+                "appendText": "*                                                                                                                                                                                                                                  "
+            }
+        },
+        {
+            "previousLineText": "^\\s*(/\\*|\\*(?!/)).*$",
+            "beforeText": "^[\\t ]* \\* {225}(?![\\t ])([^*]|\\*(?!/))*$",
+            "action": {
+                "indent": "none",
+                "appendText": "*                                                                                                                                                                                                                                 "
+            }
+        },
+        {
+            "previousLineText": "^\\s*(/\\*|\\*(?!/)).*$",
+            "beforeText": "^[\\t ]* \\* {224}(?![\\t ])([^*]|\\*(?!/))*$",
+            "action": {
+                "indent": "none",
+                "appendText": "*                                                                                                                                                                                                                                "
+            }
+        },
+        {
+            "previousLineText": "^\\s*(/\\*|\\*(?!/)).*$",
+            "beforeText": "^[\\t ]* \\* {223}(?![\\t ])([^*]|\\*(?!/))*$",
+            "action": {
+                "indent": "none",
+                "appendText": "*                                                                                                                                                                                                                               "
+            }
+        },
+        {
+            "previousLineText": "^\\s*(/\\*|\\*(?!/)).*$",
+            "beforeText": "^[\\t ]* \\* {222}(?![\\t ])([^*]|\\*(?!/))*$",
+            "action": {
+                "indent": "none",
+                "appendText": "*                                                                                                                                                                                                                              "
+            }
+        },
+        {
+            "previousLineText": "^\\s*(/\\*|\\*(?!/)).*$",
+            "beforeText": "^[\\t ]* \\* {221}(?![\\t ])([^*]|\\*(?!/))*$",
+            "action": {
+                "indent": "none",
+                "appendText": "*                                                                                                                                                                                                                             "
+            }
+        },
+        {
+            "previousLineText": "^\\s*(/\\*|\\*(?!/)).*$",
+            "beforeText": "^[\\t ]* \\* {220}(?![\\t ])([^*]|\\*(?!/))*$",
+            "action": {
+                "indent": "none",
+                "appendText": "*                                                                                                                                                                                                                            "
+            }
+        },
+        {
+            "previousLineText": "^\\s*(/\\*|\\*(?!/)).*$",
+            "beforeText": "^[\\t ]* \\* {219}(?![\\t ])([^*]|\\*(?!/))*$",
+            "action": {
+                "indent": "none",
+                "appendText": "*                                                                                                                                                                                                                           "
+            }
+        },
+        {
+            "previousLineText": "^\\s*(/\\*|\\*(?!/)).*$",
+            "beforeText": "^[\\t ]* \\* {218}(?![\\t ])([^*]|\\*(?!/))*$",
+            "action": {
+                "indent": "none",
+                "appendText": "*                                                                                                                                                                                                                          "
+            }
+        },
+        {
+            "previousLineText": "^\\s*(/\\*|\\*(?!/)).*$",
+            "beforeText": "^[\\t ]* \\* {217}(?![\\t ])([^*]|\\*(?!/))*$",
+            "action": {
+                "indent": "none",
+                "appendText": "*                                                                                                                                                                                                                         "
+            }
+        },
+        {
+            "previousLineText": "^\\s*(/\\*|\\*(?!/)).*$",
+            "beforeText": "^[\\t ]* \\* {216}(?![\\t ])([^*]|\\*(?!/))*$",
+            "action": {
+                "indent": "none",
+                "appendText": "*                                                                                                                                                                                                                        "
+            }
+        },
+        {
+            "previousLineText": "^\\s*(/\\*|\\*(?!/)).*$",
+            "beforeText": "^[\\t ]* \\* {215}(?![\\t ])([^*]|\\*(?!/))*$",
+            "action": {
+                "indent": "none",
+                "appendText": "*                                                                                                                                                                                                                       "
+            }
+        },
+        {
+            "previousLineText": "^\\s*(/\\*|\\*(?!/)).*$",
+            "beforeText": "^[\\t ]* \\* {214}(?![\\t ])([^*]|\\*(?!/))*$",
+            "action": {
+                "indent": "none",
+                "appendText": "*                                                                                                                                                                                                                      "
+            }
+        },
+        {
+            "previousLineText": "^\\s*(/\\*|\\*(?!/)).*$",
+            "beforeText": "^[\\t ]* \\* {213}(?![\\t ])([^*]|\\*(?!/))*$",
+            "action": {
+                "indent": "none",
+                "appendText": "*                                                                                                                                                                                                                     "
+            }
+        },
+        {
+            "previousLineText": "^\\s*(/\\*|\\*(?!/)).*$",
+            "beforeText": "^[\\t ]* \\* {212}(?![\\t ])([^*]|\\*(?!/))*$",
+            "action": {
+                "indent": "none",
+                "appendText": "*                                                                                                                                                                                                                    "
+            }
+        },
+        {
+            "previousLineText": "^\\s*(/\\*|\\*(?!/)).*$",
+            "beforeText": "^[\\t ]* \\* {211}(?![\\t ])([^*]|\\*(?!/))*$",
+            "action": {
+                "indent": "none",
+                "appendText": "*                                                                                                                                                                                                                   "
+            }
+        },
+        {
+            "previousLineText": "^\\s*(/\\*|\\*(?!/)).*$",
+            "beforeText": "^[\\t ]* \\* {210}(?![\\t ])([^*]|\\*(?!/))*$",
+            "action": {
+                "indent": "none",
+                "appendText": "*                                                                                                                                                                                                                  "
+            }
+        },
+        {
+            "previousLineText": "^\\s*(/\\*|\\*(?!/)).*$",
+            "beforeText": "^[\\t ]* \\* {209}(?![\\t ])([^*]|\\*(?!/))*$",
+            "action": {
+                "indent": "none",
+                "appendText": "*                                                                                                                                                                                                                 "
+            }
+        },
+        {
+            "previousLineText": "^\\s*(/\\*|\\*(?!/)).*$",
+            "beforeText": "^[\\t ]* \\* {208}(?![\\t ])([^*]|\\*(?!/))*$",
+            "action": {
+                "indent": "none",
+                "appendText": "*                                                                                                                                                                                                                "
+            }
+        },
+        {
+            "previousLineText": "^\\s*(/\\*|\\*(?!/)).*$",
+            "beforeText": "^[\\t ]* \\* {207}(?![\\t ])([^*]|\\*(?!/))*$",
+            "action": {
+                "indent": "none",
+                "appendText": "*                                                                                                                                                                                                               "
+            }
+        },
+        {
+            "previousLineText": "^\\s*(/\\*|\\*(?!/)).*$",
+            "beforeText": "^[\\t ]* \\* {206}(?![\\t ])([^*]|\\*(?!/))*$",
+            "action": {
+                "indent": "none",
+                "appendText": "*                                                                                                                                                                                                              "
+            }
+        },
+        {
+            "previousLineText": "^\\s*(/\\*|\\*(?!/)).*$",
+            "beforeText": "^[\\t ]* \\* {205}(?![\\t ])([^*]|\\*(?!/))*$",
+            "action": {
+                "indent": "none",
+                "appendText": "*                                                                                                                                                                                                             "
+            }
+        },
+        {
+            "previousLineText": "^\\s*(/\\*|\\*(?!/)).*$",
+            "beforeText": "^[\\t ]* \\* {204}(?![\\t ])([^*]|\\*(?!/))*$",
+            "action": {
+                "indent": "none",
+                "appendText": "*                                                                                                                                                                                                            "
+            }
+        },
+        {
+            "previousLineText": "^\\s*(/\\*|\\*(?!/)).*$",
+            "beforeText": "^[\\t ]* \\* {203}(?![\\t ])([^*]|\\*(?!/))*$",
+            "action": {
+                "indent": "none",
+                "appendText": "*                                                                                                                                                                                                           "
+            }
+        },
+        {
+            "previousLineText": "^\\s*(/\\*|\\*(?!/)).*$",
+            "beforeText": "^[\\t ]* \\* {202}(?![\\t ])([^*]|\\*(?!/))*$",
+            "action": {
+                "indent": "none",
+                "appendText": "*                                                                                                                                                                                                          "
+            }
+        },
+        {
+            "previousLineText": "^\\s*(/\\*|\\*(?!/)).*$",
+            "beforeText": "^[\\t ]* \\* {201}(?![\\t ])([^*]|\\*(?!/))*$",
+            "action": {
+                "indent": "none",
+                "appendText": "*                                                                                                                                                                                                         "
+            }
+        },
+        {
+            "previousLineText": "^\\s*(/\\*|\\*(?!/)).*$",
+            "beforeText": "^[\\t ]* \\* {200}(?![\\t ])([^*]|\\*(?!/))*$",
+            "action": {
+                "indent": "none",
+                "appendText": "*                                                                                                                                                                                                        "
+            }
+        },
+        {
+            "previousLineText": "^\\s*(/\\*|\\*(?!/)).*$",
+            "beforeText": "^[\\t ]* \\* {199}(?![\\t ])([^*]|\\*(?!/))*$",
+            "action": {
+                "indent": "none",
+                "appendText": "*                                                                                                                                                                                                       "
+            }
+        },
+        {
+            "previousLineText": "^\\s*(/\\*|\\*(?!/)).*$",
+            "beforeText": "^[\\t ]* \\* {198}(?![\\t ])([^*]|\\*(?!/))*$",
+            "action": {
+                "indent": "none",
+                "appendText": "*                                                                                                                                                                                                      "
+            }
+        },
+        {
+            "previousLineText": "^\\s*(/\\*|\\*(?!/)).*$",
+            "beforeText": "^[\\t ]* \\* {197}(?![\\t ])([^*]|\\*(?!/))*$",
+            "action": {
+                "indent": "none",
+                "appendText": "*                                                                                                                                                                                                     "
+            }
+        },
+        {
+            "previousLineText": "^\\s*(/\\*|\\*(?!/)).*$",
+            "beforeText": "^[\\t ]* \\* {196}(?![\\t ])([^*]|\\*(?!/))*$",
+            "action": {
+                "indent": "none",
+                "appendText": "*                                                                                                                                                                                                    "
+            }
+        },
+        {
+            "previousLineText": "^\\s*(/\\*|\\*(?!/)).*$",
+            "beforeText": "^[\\t ]* \\* {195}(?![\\t ])([^*]|\\*(?!/))*$",
+            "action": {
+                "indent": "none",
+                "appendText": "*                                                                                                                                                                                                   "
+            }
+        },
+        {
+            "previousLineText": "^\\s*(/\\*|\\*(?!/)).*$",
+            "beforeText": "^[\\t ]* \\* {194}(?![\\t ])([^*]|\\*(?!/))*$",
+            "action": {
+                "indent": "none",
+                "appendText": "*                                                                                                                                                                                                  "
+            }
+        },
+        {
+            "previousLineText": "^\\s*(/\\*|\\*(?!/)).*$",
+            "beforeText": "^[\\t ]* \\* {193}(?![\\t ])([^*]|\\*(?!/))*$",
+            "action": {
+                "indent": "none",
+                "appendText": "*                                                                                                                                                                                                 "
+            }
+        },
+        {
+            "previousLineText": "^\\s*(/\\*|\\*(?!/)).*$",
+            "beforeText": "^[\\t ]* \\* {192}(?![\\t ])([^*]|\\*(?!/))*$",
+            "action": {
+                "indent": "none",
+                "appendText": "*                                                                                                                                                                                                "
+            }
+        },
+        {
+            "previousLineText": "^\\s*(/\\*|\\*(?!/)).*$",
+            "beforeText": "^[\\t ]* \\* {191}(?![\\t ])([^*]|\\*(?!/))*$",
+            "action": {
+                "indent": "none",
+                "appendText": "*                                                                                                                                                                                               "
+            }
+        },
+        {
+            "previousLineText": "^\\s*(/\\*|\\*(?!/)).*$",
+            "beforeText": "^[\\t ]* \\* {190}(?![\\t ])([^*]|\\*(?!/))*$",
+            "action": {
+                "indent": "none",
+                "appendText": "*                                                                                                                                                                                              "
+            }
+        },
+        {
+            "previousLineText": "^\\s*(/\\*|\\*(?!/)).*$",
+            "beforeText": "^[\\t ]* \\* {189}(?![\\t ])([^*]|\\*(?!/))*$",
+            "action": {
+                "indent": "none",
+                "appendText": "*                                                                                                                                                                                             "
+            }
+        },
+        {
+            "previousLineText": "^\\s*(/\\*|\\*(?!/)).*$",
+            "beforeText": "^[\\t ]* \\* {188}(?![\\t ])([^*]|\\*(?!/))*$",
+            "action": {
+                "indent": "none",
+                "appendText": "*                                                                                                                                                                                            "
+            }
+        },
+        {
+            "previousLineText": "^\\s*(/\\*|\\*(?!/)).*$",
+            "beforeText": "^[\\t ]* \\* {187}(?![\\t ])([^*]|\\*(?!/))*$",
+            "action": {
+                "indent": "none",
+                "appendText": "*                                                                                                                                                                                           "
+            }
+        },
+        {
+            "previousLineText": "^\\s*(/\\*|\\*(?!/)).*$",
+            "beforeText": "^[\\t ]* \\* {186}(?![\\t ])([^*]|\\*(?!/))*$",
+            "action": {
+                "indent": "none",
+                "appendText": "*                                                                                                                                                                                          "
+            }
+        },
+        {
+            "previousLineText": "^\\s*(/\\*|\\*(?!/)).*$",
+            "beforeText": "^[\\t ]* \\* {185}(?![\\t ])([^*]|\\*(?!/))*$",
+            "action": {
+                "indent": "none",
+                "appendText": "*                                                                                                                                                                                         "
+            }
+        },
+        {
+            "previousLineText": "^\\s*(/\\*|\\*(?!/)).*$",
+            "beforeText": "^[\\t ]* \\* {184}(?![\\t ])([^*]|\\*(?!/))*$",
+            "action": {
+                "indent": "none",
+                "appendText": "*                                                                                                                                                                                        "
+            }
+        },
+        {
+            "previousLineText": "^\\s*(/\\*|\\*(?!/)).*$",
+            "beforeText": "^[\\t ]* \\* {183}(?![\\t ])([^*]|\\*(?!/))*$",
+            "action": {
+                "indent": "none",
+                "appendText": "*                                                                                                                                                                                       "
+            }
+        },
+        {
+            "previousLineText": "^\\s*(/\\*|\\*(?!/)).*$",
+            "beforeText": "^[\\t ]* \\* {182}(?![\\t ])([^*]|\\*(?!/))*$",
+            "action": {
+                "indent": "none",
+                "appendText": "*                                                                                                                                                                                      "
+            }
+        },
+        {
+            "previousLineText": "^\\s*(/\\*|\\*(?!/)).*$",
+            "beforeText": "^[\\t ]* \\* {181}(?![\\t ])([^*]|\\*(?!/))*$",
+            "action": {
+                "indent": "none",
+                "appendText": "*                                                                                                                                                                                     "
+            }
+        },
+        {
+            "previousLineText": "^\\s*(/\\*|\\*(?!/)).*$",
+            "beforeText": "^[\\t ]* \\* {180}(?![\\t ])([^*]|\\*(?!/))*$",
+            "action": {
+                "indent": "none",
+                "appendText": "*                                                                                                                                                                                    "
+            }
+        },
+        {
+            "previousLineText": "^\\s*(/\\*|\\*(?!/)).*$",
+            "beforeText": "^[\\t ]* \\* {179}(?![\\t ])([^*]|\\*(?!/))*$",
+            "action": {
+                "indent": "none",
+                "appendText": "*                                                                                                                                                                                   "
+            }
+        },
+        {
+            "previousLineText": "^\\s*(/\\*|\\*(?!/)).*$",
+            "beforeText": "^[\\t ]* \\* {178}(?![\\t ])([^*]|\\*(?!/))*$",
+            "action": {
+                "indent": "none",
+                "appendText": "*                                                                                                                                                                                  "
+            }
+        },
+        {
+            "previousLineText": "^\\s*(/\\*|\\*(?!/)).*$",
+            "beforeText": "^[\\t ]* \\* {177}(?![\\t ])([^*]|\\*(?!/))*$",
+            "action": {
+                "indent": "none",
+                "appendText": "*                                                                                                                                                                                 "
+            }
+        },
+        {
+            "previousLineText": "^\\s*(/\\*|\\*(?!/)).*$",
+            "beforeText": "^[\\t ]* \\* {176}(?![\\t ])([^*]|\\*(?!/))*$",
+            "action": {
+                "indent": "none",
+                "appendText": "*                                                                                                                                                                                "
+            }
+        },
+        {
+            "previousLineText": "^\\s*(/\\*|\\*(?!/)).*$",
+            "beforeText": "^[\\t ]* \\* {175}(?![\\t ])([^*]|\\*(?!/))*$",
+            "action": {
+                "indent": "none",
+                "appendText": "*                                                                                                                                                                               "
+            }
+        },
+        {
+            "previousLineText": "^\\s*(/\\*|\\*(?!/)).*$",
+            "beforeText": "^[\\t ]* \\* {174}(?![\\t ])([^*]|\\*(?!/))*$",
+            "action": {
+                "indent": "none",
+                "appendText": "*                                                                                                                                                                              "
+            }
+        },
+        {
+            "previousLineText": "^\\s*(/\\*|\\*(?!/)).*$",
+            "beforeText": "^[\\t ]* \\* {173}(?![\\t ])([^*]|\\*(?!/))*$",
+            "action": {
+                "indent": "none",
+                "appendText": "*                                                                                                                                                                             "
+            }
+        },
+        {
+            "previousLineText": "^\\s*(/\\*|\\*(?!/)).*$",
+            "beforeText": "^[\\t ]* \\* {172}(?![\\t ])([^*]|\\*(?!/))*$",
+            "action": {
+                "indent": "none",
+                "appendText": "*                                                                                                                                                                            "
+            }
+        },
+        {
+            "previousLineText": "^\\s*(/\\*|\\*(?!/)).*$",
+            "beforeText": "^[\\t ]* \\* {171}(?![\\t ])([^*]|\\*(?!/))*$",
+            "action": {
+                "indent": "none",
+                "appendText": "*                                                                                                                                                                           "
+            }
+        },
+        {
+            "previousLineText": "^\\s*(/\\*|\\*(?!/)).*$",
+            "beforeText": "^[\\t ]* \\* {170}(?![\\t ])([^*]|\\*(?!/))*$",
+            "action": {
+                "indent": "none",
+                "appendText": "*                                                                                                                                                                          "
+            }
+        },
+        {
+            "previousLineText": "^\\s*(/\\*|\\*(?!/)).*$",
+            "beforeText": "^[\\t ]* \\* {169}(?![\\t ])([^*]|\\*(?!/))*$",
+            "action": {
+                "indent": "none",
+                "appendText": "*                                                                                                                                                                         "
+            }
+        },
+        {
+            "previousLineText": "^\\s*(/\\*|\\*(?!/)).*$",
+            "beforeText": "^[\\t ]* \\* {168}(?![\\t ])([^*]|\\*(?!/))*$",
+            "action": {
+                "indent": "none",
+                "appendText": "*                                                                                                                                                                        "
+            }
+        },
+        {
+            "previousLineText": "^\\s*(/\\*|\\*(?!/)).*$",
+            "beforeText": "^[\\t ]* \\* {167}(?![\\t ])([^*]|\\*(?!/))*$",
+            "action": {
+                "indent": "none",
+                "appendText": "*                                                                                                                                                                       "
+            }
+        },
+        {
+            "previousLineText": "^\\s*(/\\*|\\*(?!/)).*$",
+            "beforeText": "^[\\t ]* \\* {166}(?![\\t ])([^*]|\\*(?!/))*$",
+            "action": {
+                "indent": "none",
+                "appendText": "*                                                                                                                                                                      "
+            }
+        },
+        {
+            "previousLineText": "^\\s*(/\\*|\\*(?!/)).*$",
+            "beforeText": "^[\\t ]* \\* {165}(?![\\t ])([^*]|\\*(?!/))*$",
+            "action": {
+                "indent": "none",
+                "appendText": "*                                                                                                                                                                     "
+            }
+        },
+        {
+            "previousLineText": "^\\s*(/\\*|\\*(?!/)).*$",
+            "beforeText": "^[\\t ]* \\* {164}(?![\\t ])([^*]|\\*(?!/))*$",
+            "action": {
+                "indent": "none",
+                "appendText": "*                                                                                                                                                                    "
+            }
+        },
+        {
+            "previousLineText": "^\\s*(/\\*|\\*(?!/)).*$",
+            "beforeText": "^[\\t ]* \\* {163}(?![\\t ])([^*]|\\*(?!/))*$",
+            "action": {
+                "indent": "none",
+                "appendText": "*                                                                                                                                                                   "
+            }
+        },
+        {
+            "previousLineText": "^\\s*(/\\*|\\*(?!/)).*$",
+            "beforeText": "^[\\t ]* \\* {162}(?![\\t ])([^*]|\\*(?!/))*$",
+            "action": {
+                "indent": "none",
+                "appendText": "*                                                                                                                                                                  "
+            }
+        },
+        {
+            "previousLineText": "^\\s*(/\\*|\\*(?!/)).*$",
+            "beforeText": "^[\\t ]* \\* {161}(?![\\t ])([^*]|\\*(?!/))*$",
+            "action": {
+                "indent": "none",
+                "appendText": "*                                                                                                                                                                 "
+            }
+        },
+        {
+            "previousLineText": "^\\s*(/\\*|\\*(?!/)).*$",
+            "beforeText": "^[\\t ]* \\* {160}(?![\\t ])([^*]|\\*(?!/))*$",
+            "action": {
+                "indent": "none",
+                "appendText": "*                                                                                                                                                                "
+            }
+        },
+        {
+            "previousLineText": "^\\s*(/\\*|\\*(?!/)).*$",
+            "beforeText": "^[\\t ]* \\* {159}(?![\\t ])([^*]|\\*(?!/))*$",
+            "action": {
+                "indent": "none",
+                "appendText": "*                                                                                                                                                               "
+            }
+        },
+        {
+            "previousLineText": "^\\s*(/\\*|\\*(?!/)).*$",
+            "beforeText": "^[\\t ]* \\* {158}(?![\\t ])([^*]|\\*(?!/))*$",
+            "action": {
+                "indent": "none",
+                "appendText": "*                                                                                                                                                              "
+            }
+        },
+        {
+            "previousLineText": "^\\s*(/\\*|\\*(?!/)).*$",
+            "beforeText": "^[\\t ]* \\* {157}(?![\\t ])([^*]|\\*(?!/))*$",
+            "action": {
+                "indent": "none",
+                "appendText": "*                                                                                                                                                             "
+            }
+        },
+        {
+            "previousLineText": "^\\s*(/\\*|\\*(?!/)).*$",
+            "beforeText": "^[\\t ]* \\* {156}(?![\\t ])([^*]|\\*(?!/))*$",
+            "action": {
+                "indent": "none",
+                "appendText": "*                                                                                                                                                            "
+            }
+        },
+        {
+            "previousLineText": "^\\s*(/\\*|\\*(?!/)).*$",
+            "beforeText": "^[\\t ]* \\* {155}(?![\\t ])([^*]|\\*(?!/))*$",
+            "action": {
+                "indent": "none",
+                "appendText": "*                                                                                                                                                           "
+            }
+        },
+        {
+            "previousLineText": "^\\s*(/\\*|\\*(?!/)).*$",
+            "beforeText": "^[\\t ]* \\* {154}(?![\\t ])([^*]|\\*(?!/))*$",
+            "action": {
+                "indent": "none",
+                "appendText": "*                                                                                                                                                          "
+            }
+        },
+        {
+            "previousLineText": "^\\s*(/\\*|\\*(?!/)).*$",
+            "beforeText": "^[\\t ]* \\* {153}(?![\\t ])([^*]|\\*(?!/))*$",
+            "action": {
+                "indent": "none",
+                "appendText": "*                                                                                                                                                         "
+            }
+        },
+        {
+            "previousLineText": "^\\s*(/\\*|\\*(?!/)).*$",
+            "beforeText": "^[\\t ]* \\* {152}(?![\\t ])([^*]|\\*(?!/))*$",
+            "action": {
+                "indent": "none",
+                "appendText": "*                                                                                                                                                        "
+            }
+        },
+        {
+            "previousLineText": "^\\s*(/\\*|\\*(?!/)).*$",
+            "beforeText": "^[\\t ]* \\* {151}(?![\\t ])([^*]|\\*(?!/))*$",
+            "action": {
+                "indent": "none",
+                "appendText": "*                                                                                                                                                       "
+            }
+        },
+        {
+            "previousLineText": "^\\s*(/\\*|\\*(?!/)).*$",
+            "beforeText": "^[\\t ]* \\* {150}(?![\\t ])([^*]|\\*(?!/))*$",
+            "action": {
+                "indent": "none",
+                "appendText": "*                                                                                                                                                      "
+            }
+        },
+        {
+            "previousLineText": "^\\s*(/\\*|\\*(?!/)).*$",
+            "beforeText": "^[\\t ]* \\* {149}(?![\\t ])([^*]|\\*(?!/))*$",
+            "action": {
+                "indent": "none",
+                "appendText": "*                                                                                                                                                     "
+            }
+        },
+        {
+            "previousLineText": "^\\s*(/\\*|\\*(?!/)).*$",
+            "beforeText": "^[\\t ]* \\* {148}(?![\\t ])([^*]|\\*(?!/))*$",
+            "action": {
+                "indent": "none",
+                "appendText": "*                                                                                                                                                    "
+            }
+        },
+        {
+            "previousLineText": "^\\s*(/\\*|\\*(?!/)).*$",
+            "beforeText": "^[\\t ]* \\* {147}(?![\\t ])([^*]|\\*(?!/))*$",
+            "action": {
+                "indent": "none",
+                "appendText": "*                                                                                                                                                   "
+            }
+        },
+        {
+            "previousLineText": "^\\s*(/\\*|\\*(?!/)).*$",
+            "beforeText": "^[\\t ]* \\* {146}(?![\\t ])([^*]|\\*(?!/))*$",
+            "action": {
+                "indent": "none",
+                "appendText": "*                                                                                                                                                  "
+            }
+        },
+        {
+            "previousLineText": "^\\s*(/\\*|\\*(?!/)).*$",
+            "beforeText": "^[\\t ]* \\* {145}(?![\\t ])([^*]|\\*(?!/))*$",
+            "action": {
+                "indent": "none",
+                "appendText": "*                                                                                                                                                 "
+            }
+        },
+        {
+            "previousLineText": "^\\s*(/\\*|\\*(?!/)).*$",
+            "beforeText": "^[\\t ]* \\* {144}(?![\\t ])([^*]|\\*(?!/))*$",
+            "action": {
+                "indent": "none",
+                "appendText": "*                                                                                                                                                "
+            }
+        },
+        {
+            "previousLineText": "^\\s*(/\\*|\\*(?!/)).*$",
+            "beforeText": "^[\\t ]* \\* {143}(?![\\t ])([^*]|\\*(?!/))*$",
+            "action": {
+                "indent": "none",
+                "appendText": "*                                                                                                                                               "
+            }
+        },
+        {
+            "previousLineText": "^\\s*(/\\*|\\*(?!/)).*$",
+            "beforeText": "^[\\t ]* \\* {142}(?![\\t ])([^*]|\\*(?!/))*$",
+            "action": {
+                "indent": "none",
+                "appendText": "*                                                                                                                                              "
+            }
+        },
+        {
+            "previousLineText": "^\\s*(/\\*|\\*(?!/)).*$",
+            "beforeText": "^[\\t ]* \\* {141}(?![\\t ])([^*]|\\*(?!/))*$",
+            "action": {
+                "indent": "none",
+                "appendText": "*                                                                                                                                             "
+            }
+        },
+        {
+            "previousLineText": "^\\s*(/\\*|\\*(?!/)).*$",
+            "beforeText": "^[\\t ]* \\* {140}(?![\\t ])([^*]|\\*(?!/))*$",
+            "action": {
+                "indent": "none",
+                "appendText": "*                                                                                                                                            "
+            }
+        },
+        {
+            "previousLineText": "^\\s*(/\\*|\\*(?!/)).*$",
+            "beforeText": "^[\\t ]* \\* {139}(?![\\t ])([^*]|\\*(?!/))*$",
+            "action": {
+                "indent": "none",
+                "appendText": "*                                                                                                                                           "
+            }
+        },
+        {
+            "previousLineText": "^\\s*(/\\*|\\*(?!/)).*$",
+            "beforeText": "^[\\t ]* \\* {138}(?![\\t ])([^*]|\\*(?!/))*$",
+            "action": {
+                "indent": "none",
+                "appendText": "*                                                                                                                                          "
+            }
+        },
+        {
+            "previousLineText": "^\\s*(/\\*|\\*(?!/)).*$",
+            "beforeText": "^[\\t ]* \\* {137}(?![\\t ])([^*]|\\*(?!/))*$",
+            "action": {
+                "indent": "none",
+                "appendText": "*                                                                                                                                         "
+            }
+        },
+        {
+            "previousLineText": "^\\s*(/\\*|\\*(?!/)).*$",
+            "beforeText": "^[\\t ]* \\* {136}(?![\\t ])([^*]|\\*(?!/))*$",
+            "action": {
+                "indent": "none",
+                "appendText": "*                                                                                                                                        "
+            }
+        },
+        {
+            "previousLineText": "^\\s*(/\\*|\\*(?!/)).*$",
+            "beforeText": "^[\\t ]* \\* {135}(?![\\t ])([^*]|\\*(?!/))*$",
+            "action": {
+                "indent": "none",
+                "appendText": "*                                                                                                                                       "
+            }
+        },
+        {
+            "previousLineText": "^\\s*(/\\*|\\*(?!/)).*$",
+            "beforeText": "^[\\t ]* \\* {134}(?![\\t ])([^*]|\\*(?!/))*$",
+            "action": {
+                "indent": "none",
+                "appendText": "*                                                                                                                                      "
+            }
+        },
+        {
+            "previousLineText": "^\\s*(/\\*|\\*(?!/)).*$",
+            "beforeText": "^[\\t ]* \\* {133}(?![\\t ])([^*]|\\*(?!/))*$",
+            "action": {
+                "indent": "none",
+                "appendText": "*                                                                                                                                     "
+            }
+        },
+        {
+            "previousLineText": "^\\s*(/\\*|\\*(?!/)).*$",
+            "beforeText": "^[\\t ]* \\* {132}(?![\\t ])([^*]|\\*(?!/))*$",
+            "action": {
+                "indent": "none",
+                "appendText": "*                                                                                                                                    "
+            }
+        },
+        {
+            "previousLineText": "^\\s*(/\\*|\\*(?!/)).*$",
+            "beforeText": "^[\\t ]* \\* {131}(?![\\t ])([^*]|\\*(?!/))*$",
+            "action": {
+                "indent": "none",
+                "appendText": "*                                                                                                                                   "
+            }
+        },
+        {
+            "previousLineText": "^\\s*(/\\*|\\*(?!/)).*$",
+            "beforeText": "^[\\t ]* \\* {130}(?![\\t ])([^*]|\\*(?!/))*$",
+            "action": {
+                "indent": "none",
+                "appendText": "*                                                                                                                                  "
+            }
+        },
+        {
+            "previousLineText": "^\\s*(/\\*|\\*(?!/)).*$",
+            "beforeText": "^[\\t ]* \\* {129}(?![\\t ])([^*]|\\*(?!/))*$",
+            "action": {
+                "indent": "none",
+                "appendText": "*                                                                                                                                 "
+            }
+        },
+        {
+            "previousLineText": "^\\s*(/\\*|\\*(?!/)).*$",
+            "beforeText": "^[\\t ]* \\* {128}(?![\\t ])([^*]|\\*(?!/))*$",
+            "action": {
+                "indent": "none",
+                "appendText": "*                                                                                                                                "
+            }
+        },
+        {
+            "previousLineText": "^\\s*(/\\*|\\*(?!/)).*$",
+            "beforeText": "^[\\t ]* \\* {127}(?![\\t ])([^*]|\\*(?!/))*$",
+            "action": {
+                "indent": "none",
+                "appendText": "*                                                                                                                               "
+            }
+        },
+        {
+            "previousLineText": "^\\s*(/\\*|\\*(?!/)).*$",
+            "beforeText": "^[\\t ]* \\* {126}(?![\\t ])([^*]|\\*(?!/))*$",
+            "action": {
+                "indent": "none",
+                "appendText": "*                                                                                                                              "
+            }
+        },
+        {
+            "previousLineText": "^\\s*(/\\*|\\*(?!/)).*$",
+            "beforeText": "^[\\t ]* \\* {125}(?![\\t ])([^*]|\\*(?!/))*$",
+            "action": {
+                "indent": "none",
+                "appendText": "*                                                                                                                             "
+            }
+        },
+        {
+            "previousLineText": "^\\s*(/\\*|\\*(?!/)).*$",
+            "beforeText": "^[\\t ]* \\* {124}(?![\\t ])([^*]|\\*(?!/))*$",
+            "action": {
+                "indent": "none",
+                "appendText": "*                                                                                                                            "
+            }
+        },
+        {
+            "previousLineText": "^\\s*(/\\*|\\*(?!/)).*$",
+            "beforeText": "^[\\t ]* \\* {123}(?![\\t ])([^*]|\\*(?!/))*$",
+            "action": {
+                "indent": "none",
+                "appendText": "*                                                                                                                           "
+            }
+        },
+        {
+            "previousLineText": "^\\s*(/\\*|\\*(?!/)).*$",
+            "beforeText": "^[\\t ]* \\* {122}(?![\\t ])([^*]|\\*(?!/))*$",
+            "action": {
+                "indent": "none",
+                "appendText": "*                                                                                                                          "
+            }
+        },
+        {
+            "previousLineText": "^\\s*(/\\*|\\*(?!/)).*$",
+            "beforeText": "^[\\t ]* \\* {121}(?![\\t ])([^*]|\\*(?!/))*$",
+            "action": {
+                "indent": "none",
+                "appendText": "*                                                                                                                         "
+            }
+        },
+        {
+            "previousLineText": "^\\s*(/\\*|\\*(?!/)).*$",
+            "beforeText": "^[\\t ]* \\* {120}(?![\\t ])([^*]|\\*(?!/))*$",
+            "action": {
+                "indent": "none",
+                "appendText": "*                                                                                                                        "
+            }
+        },
+        {
+            "previousLineText": "^\\s*(/\\*|\\*(?!/)).*$",
+            "beforeText": "^[\\t ]* \\* {119}(?![\\t ])([^*]|\\*(?!/))*$",
+            "action": {
+                "indent": "none",
+                "appendText": "*                                                                                                                       "
+            }
+        },
+        {
+            "previousLineText": "^\\s*(/\\*|\\*(?!/)).*$",
+            "beforeText": "^[\\t ]* \\* {118}(?![\\t ])([^*]|\\*(?!/))*$",
+            "action": {
+                "indent": "none",
+                "appendText": "*                                                                                                                      "
+            }
+        },
+        {
+            "previousLineText": "^\\s*(/\\*|\\*(?!/)).*$",
+            "beforeText": "^[\\t ]* \\* {117}(?![\\t ])([^*]|\\*(?!/))*$",
+            "action": {
+                "indent": "none",
+                "appendText": "*                                                                                                                     "
+            }
+        },
+        {
+            "previousLineText": "^\\s*(/\\*|\\*(?!/)).*$",
+            "beforeText": "^[\\t ]* \\* {116}(?![\\t ])([^*]|\\*(?!/))*$",
+            "action": {
+                "indent": "none",
+                "appendText": "*                                                                                                                    "
+            }
+        },
+        {
+            "previousLineText": "^\\s*(/\\*|\\*(?!/)).*$",
+            "beforeText": "^[\\t ]* \\* {115}(?![\\t ])([^*]|\\*(?!/))*$",
+            "action": {
+                "indent": "none",
+                "appendText": "*                                                                                                                   "
+            }
+        },
+        {
+            "previousLineText": "^\\s*(/\\*|\\*(?!/)).*$",
+            "beforeText": "^[\\t ]* \\* {114}(?![\\t ])([^*]|\\*(?!/))*$",
+            "action": {
+                "indent": "none",
+                "appendText": "*                                                                                                                  "
+            }
+        },
+        {
+            "previousLineText": "^\\s*(/\\*|\\*(?!/)).*$",
+            "beforeText": "^[\\t ]* \\* {113}(?![\\t ])([^*]|\\*(?!/))*$",
+            "action": {
+                "indent": "none",
+                "appendText": "*                                                                                                                 "
+            }
+        },
+        {
+            "previousLineText": "^\\s*(/\\*|\\*(?!/)).*$",
+            "beforeText": "^[\\t ]* \\* {112}(?![\\t ])([^*]|\\*(?!/))*$",
+            "action": {
+                "indent": "none",
+                "appendText": "*                                                                                                                "
+            }
+        },
+        {
+            "previousLineText": "^\\s*(/\\*|\\*(?!/)).*$",
+            "beforeText": "^[\\t ]* \\* {111}(?![\\t ])([^*]|\\*(?!/))*$",
+            "action": {
+                "indent": "none",
+                "appendText": "*                                                                                                               "
+            }
+        },
+        {
+            "previousLineText": "^\\s*(/\\*|\\*(?!/)).*$",
+            "beforeText": "^[\\t ]* \\* {110}(?![\\t ])([^*]|\\*(?!/))*$",
+            "action": {
+                "indent": "none",
+                "appendText": "*                                                                                                              "
+            }
+        },
+        {
+            "previousLineText": "^\\s*(/\\*|\\*(?!/)).*$",
+            "beforeText": "^[\\t ]* \\* {109}(?![\\t ])([^*]|\\*(?!/))*$",
+            "action": {
+                "indent": "none",
+                "appendText": "*                                                                                                             "
+            }
+        },
+        {
+            "previousLineText": "^\\s*(/\\*|\\*(?!/)).*$",
+            "beforeText": "^[\\t ]* \\* {108}(?![\\t ])([^*]|\\*(?!/))*$",
+            "action": {
+                "indent": "none",
+                "appendText": "*                                                                                                            "
+            }
+        },
+        {
+            "previousLineText": "^\\s*(/\\*|\\*(?!/)).*$",
+            "beforeText": "^[\\t ]* \\* {107}(?![\\t ])([^*]|\\*(?!/))*$",
+            "action": {
+                "indent": "none",
+                "appendText": "*                                                                                                           "
+            }
+        },
+        {
+            "previousLineText": "^\\s*(/\\*|\\*(?!/)).*$",
+            "beforeText": "^[\\t ]* \\* {106}(?![\\t ])([^*]|\\*(?!/))*$",
+            "action": {
+                "indent": "none",
+                "appendText": "*                                                                                                          "
+            }
+        },
+        {
+            "previousLineText": "^\\s*(/\\*|\\*(?!/)).*$",
+            "beforeText": "^[\\t ]* \\* {105}(?![\\t ])([^*]|\\*(?!/))*$",
+            "action": {
+                "indent": "none",
+                "appendText": "*                                                                                                         "
+            }
+        },
+        {
+            "previousLineText": "^\\s*(/\\*|\\*(?!/)).*$",
+            "beforeText": "^[\\t ]* \\* {104}(?![\\t ])([^*]|\\*(?!/))*$",
+            "action": {
+                "indent": "none",
+                "appendText": "*                                                                                                        "
+            }
+        },
+        {
+            "previousLineText": "^\\s*(/\\*|\\*(?!/)).*$",
+            "beforeText": "^[\\t ]* \\* {103}(?![\\t ])([^*]|\\*(?!/))*$",
+            "action": {
+                "indent": "none",
+                "appendText": "*                                                                                                       "
+            }
+        },
+        {
+            "previousLineText": "^\\s*(/\\*|\\*(?!/)).*$",
+            "beforeText": "^[\\t ]* \\* {102}(?![\\t ])([^*]|\\*(?!/))*$",
+            "action": {
+                "indent": "none",
+                "appendText": "*                                                                                                      "
+            }
+        },
+        {
+            "previousLineText": "^\\s*(/\\*|\\*(?!/)).*$",
+            "beforeText": "^[\\t ]* \\* {101}(?![\\t ])([^*]|\\*(?!/))*$",
+            "action": {
+                "indent": "none",
+                "appendText": "*                                                                                                     "
+            }
+        },
+        {
+            "previousLineText": "^\\s*(/\\*|\\*(?!/)).*$",
+            "beforeText": "^[\\t ]* \\* {100}(?![\\t ])([^*]|\\*(?!/))*$",
+            "action": {
+                "indent": "none",
+                "appendText": "*                                                                                                    "
+            }
+        },
+        {
+            "previousLineText": "^\\s*(/\\*|\\*(?!/)).*$",
+            "beforeText": "^[\\t ]* \\* {99}(?![\\t ])([^*]|\\*(?!/))*$",
+            "action": {
+                "indent": "none",
+                "appendText": "*                                                                                                   "
+            }
+        },
+        {
+            "previousLineText": "^\\s*(/\\*|\\*(?!/)).*$",
+            "beforeText": "^[\\t ]* \\* {98}(?![\\t ])([^*]|\\*(?!/))*$",
+            "action": {
+                "indent": "none",
+                "appendText": "*                                                                                                  "
+            }
+        },
+        {
+            "previousLineText": "^\\s*(/\\*|\\*(?!/)).*$",
+            "beforeText": "^[\\t ]* \\* {97}(?![\\t ])([^*]|\\*(?!/))*$",
+            "action": {
+                "indent": "none",
+                "appendText": "*                                                                                                 "
+            }
+        },
+        {
+            "previousLineText": "^\\s*(/\\*|\\*(?!/)).*$",
+            "beforeText": "^[\\t ]* \\* {96}(?![\\t ])([^*]|\\*(?!/))*$",
+            "action": {
+                "indent": "none",
+                "appendText": "*                                                                                                "
+            }
+        },
+        {
+            "previousLineText": "^\\s*(/\\*|\\*(?!/)).*$",
+            "beforeText": "^[\\t ]* \\* {95}(?![\\t ])([^*]|\\*(?!/))*$",
+            "action": {
+                "indent": "none",
+                "appendText": "*                                                                                               "
+            }
+        },
+        {
+            "previousLineText": "^\\s*(/\\*|\\*(?!/)).*$",
+            "beforeText": "^[\\t ]* \\* {94}(?![\\t ])([^*]|\\*(?!/))*$",
+            "action": {
+                "indent": "none",
+                "appendText": "*                                                                                              "
+            }
+        },
+        {
+            "previousLineText": "^\\s*(/\\*|\\*(?!/)).*$",
+            "beforeText": "^[\\t ]* \\* {93}(?![\\t ])([^*]|\\*(?!/))*$",
+            "action": {
+                "indent": "none",
+                "appendText": "*                                                                                             "
+            }
+        },
+        {
+            "previousLineText": "^\\s*(/\\*|\\*(?!/)).*$",
+            "beforeText": "^[\\t ]* \\* {92}(?![\\t ])([^*]|\\*(?!/))*$",
+            "action": {
+                "indent": "none",
+                "appendText": "*                                                                                            "
+            }
+        },
+        {
+            "previousLineText": "^\\s*(/\\*|\\*(?!/)).*$",
+            "beforeText": "^[\\t ]* \\* {91}(?![\\t ])([^*]|\\*(?!/))*$",
+            "action": {
+                "indent": "none",
+                "appendText": "*                                                                                           "
+            }
+        },
+        {
+            "previousLineText": "^\\s*(/\\*|\\*(?!/)).*$",
+            "beforeText": "^[\\t ]* \\* {90}(?![\\t ])([^*]|\\*(?!/))*$",
+            "action": {
+                "indent": "none",
+                "appendText": "*                                                                                          "
+            }
+        },
+        {
+            "previousLineText": "^\\s*(/\\*|\\*(?!/)).*$",
+            "beforeText": "^[\\t ]* \\* {89}(?![\\t ])([^*]|\\*(?!/))*$",
+            "action": {
+                "indent": "none",
+                "appendText": "*                                                                                         "
+            }
+        },
+        {
+            "previousLineText": "^\\s*(/\\*|\\*(?!/)).*$",
+            "beforeText": "^[\\t ]* \\* {88}(?![\\t ])([^*]|\\*(?!/))*$",
+            "action": {
+                "indent": "none",
+                "appendText": "*                                                                                        "
+            }
+        },
+        {
+            "previousLineText": "^\\s*(/\\*|\\*(?!/)).*$",
+            "beforeText": "^[\\t ]* \\* {87}(?![\\t ])([^*]|\\*(?!/))*$",
+            "action": {
+                "indent": "none",
+                "appendText": "*                                                                                       "
+            }
+        },
+        {
+            "previousLineText": "^\\s*(/\\*|\\*(?!/)).*$",
+            "beforeText": "^[\\t ]* \\* {86}(?![\\t ])([^*]|\\*(?!/))*$",
+            "action": {
+                "indent": "none",
+                "appendText": "*                                                                                      "
+            }
+        },
+        {
+            "previousLineText": "^\\s*(/\\*|\\*(?!/)).*$",
+            "beforeText": "^[\\t ]* \\* {85}(?![\\t ])([^*]|\\*(?!/))*$",
+            "action": {
+                "indent": "none",
+                "appendText": "*                                                                                     "
+            }
+        },
+        {
+            "previousLineText": "^\\s*(/\\*|\\*(?!/)).*$",
+            "beforeText": "^[\\t ]* \\* {84}(?![\\t ])([^*]|\\*(?!/))*$",
+            "action": {
+                "indent": "none",
+                "appendText": "*                                                                                    "
+            }
+        },
+        {
+            "previousLineText": "^\\s*(/\\*|\\*(?!/)).*$",
+            "beforeText": "^[\\t ]* \\* {83}(?![\\t ])([^*]|\\*(?!/))*$",
+            "action": {
+                "indent": "none",
+                "appendText": "*                                                                                   "
+            }
+        },
+        {
+            "previousLineText": "^\\s*(/\\*|\\*(?!/)).*$",
+            "beforeText": "^[\\t ]* \\* {82}(?![\\t ])([^*]|\\*(?!/))*$",
+            "action": {
+                "indent": "none",
+                "appendText": "*                                                                                  "
+            }
+        },
+        {
+            "previousLineText": "^\\s*(/\\*|\\*(?!/)).*$",
+            "beforeText": "^[\\t ]* \\* {81}(?![\\t ])([^*]|\\*(?!/))*$",
+            "action": {
+                "indent": "none",
+                "appendText": "*                                                                                 "
+            }
+        },
+        {
+            "previousLineText": "^\\s*(/\\*|\\*(?!/)).*$",
+            "beforeText": "^[\\t ]* \\* {80}(?![\\t ])([^*]|\\*(?!/))*$",
+            "action": {
+                "indent": "none",
+                "appendText": "*                                                                                "
+            }
+        },
+        {
+            "previousLineText": "^\\s*(/\\*|\\*(?!/)).*$",
+            "beforeText": "^[\\t ]* \\* {79}(?![\\t ])([^*]|\\*(?!/))*$",
+            "action": {
+                "indent": "none",
+                "appendText": "*                                                                               "
+            }
+        },
+        {
+            "previousLineText": "^\\s*(/\\*|\\*(?!/)).*$",
+            "beforeText": "^[\\t ]* \\* {78}(?![\\t ])([^*]|\\*(?!/))*$",
+            "action": {
+                "indent": "none",
+                "appendText": "*                                                                              "
+            }
+        },
+        {
+            "previousLineText": "^\\s*(/\\*|\\*(?!/)).*$",
+            "beforeText": "^[\\t ]* \\* {77}(?![\\t ])([^*]|\\*(?!/))*$",
+            "action": {
+                "indent": "none",
+                "appendText": "*                                                                             "
+            }
+        },
+        {
+            "previousLineText": "^\\s*(/\\*|\\*(?!/)).*$",
+            "beforeText": "^[\\t ]* \\* {76}(?![\\t ])([^*]|\\*(?!/))*$",
+            "action": {
+                "indent": "none",
+                "appendText": "*                                                                            "
+            }
+        },
+        {
+            "previousLineText": "^\\s*(/\\*|\\*(?!/)).*$",
+            "beforeText": "^[\\t ]* \\* {75}(?![\\t ])([^*]|\\*(?!/))*$",
+            "action": {
+                "indent": "none",
+                "appendText": "*                                                                           "
+            }
+        },
+        {
+            "previousLineText": "^\\s*(/\\*|\\*(?!/)).*$",
+            "beforeText": "^[\\t ]* \\* {74}(?![\\t ])([^*]|\\*(?!/))*$",
+            "action": {
+                "indent": "none",
+                "appendText": "*                                                                          "
+            }
+        },
+        {
+            "previousLineText": "^\\s*(/\\*|\\*(?!/)).*$",
+            "beforeText": "^[\\t ]* \\* {73}(?![\\t ])([^*]|\\*(?!/))*$",
+            "action": {
+                "indent": "none",
+                "appendText": "*                                                                         "
+            }
+        },
+        {
+            "previousLineText": "^\\s*(/\\*|\\*(?!/)).*$",
+            "beforeText": "^[\\t ]* \\* {72}(?![\\t ])([^*]|\\*(?!/))*$",
+            "action": {
+                "indent": "none",
+                "appendText": "*                                                                        "
+            }
+        },
+        {
+            "previousLineText": "^\\s*(/\\*|\\*(?!/)).*$",
+            "beforeText": "^[\\t ]* \\* {71}(?![\\t ])([^*]|\\*(?!/))*$",
+            "action": {
+                "indent": "none",
+                "appendText": "*                                                                       "
+            }
+        },
+        {
+            "previousLineText": "^\\s*(/\\*|\\*(?!/)).*$",
+            "beforeText": "^[\\t ]* \\* {70}(?![\\t ])([^*]|\\*(?!/))*$",
+            "action": {
+                "indent": "none",
+                "appendText": "*                                                                      "
+            }
+        },
+        {
+            "previousLineText": "^\\s*(/\\*|\\*(?!/)).*$",
+            "beforeText": "^[\\t ]* \\* {69}(?![\\t ])([^*]|\\*(?!/))*$",
+            "action": {
+                "indent": "none",
+                "appendText": "*                                                                     "
+            }
+        },
+        {
+            "previousLineText": "^\\s*(/\\*|\\*(?!/)).*$",
+            "beforeText": "^[\\t ]* \\* {68}(?![\\t ])([^*]|\\*(?!/))*$",
+            "action": {
+                "indent": "none",
+                "appendText": "*                                                                    "
+            }
+        },
+        {
+            "previousLineText": "^\\s*(/\\*|\\*(?!/)).*$",
+            "beforeText": "^[\\t ]* \\* {67}(?![\\t ])([^*]|\\*(?!/))*$",
+            "action": {
+                "indent": "none",
+                "appendText": "*                                                                   "
+            }
+        },
+        {
+            "previousLineText": "^\\s*(/\\*|\\*(?!/)).*$",
+            "beforeText": "^[\\t ]* \\* {66}(?![\\t ])([^*]|\\*(?!/))*$",
+            "action": {
+                "indent": "none",
+                "appendText": "*                                                                  "
+            }
+        },
+        {
+            "previousLineText": "^\\s*(/\\*|\\*(?!/)).*$",
+            "beforeText": "^[\\t ]* \\* {65}(?![\\t ])([^*]|\\*(?!/))*$",
+            "action": {
+                "indent": "none",
+                "appendText": "*                                                                 "
+            }
+        },
+        {
+            "previousLineText": "^\\s*(/\\*|\\*(?!/)).*$",
+            "beforeText": "^[\\t ]* \\* {64}(?![\\t ])([^*]|\\*(?!/))*$",
+            "action": {
+                "indent": "none",
+                "appendText": "*                                                                "
+            }
+        },
+        {
+            "previousLineText": "^\\s*(/\\*|\\*(?!/)).*$",
+            "beforeText": "^[\\t ]* \\* {63}(?![\\t ])([^*]|\\*(?!/))*$",
+            "action": {
+                "indent": "none",
+                "appendText": "*                                                               "
+            }
+        },
+        {
+            "previousLineText": "^\\s*(/\\*|\\*(?!/)).*$",
+            "beforeText": "^[\\t ]* \\* {62}(?![\\t ])([^*]|\\*(?!/))*$",
+            "action": {
+                "indent": "none",
+                "appendText": "*                                                              "
+            }
+        },
+        {
+            "previousLineText": "^\\s*(/\\*|\\*(?!/)).*$",
+            "beforeText": "^[\\t ]* \\* {61}(?![\\t ])([^*]|\\*(?!/))*$",
+            "action": {
+                "indent": "none",
+                "appendText": "*                                                             "
+            }
+        },
+        {
+            "previousLineText": "^\\s*(/\\*|\\*(?!/)).*$",
+            "beforeText": "^[\\t ]* \\* {60}(?![\\t ])([^*]|\\*(?!/))*$",
+            "action": {
+                "indent": "none",
+                "appendText": "*                                                            "
+            }
+        },
+        {
+            "previousLineText": "^\\s*(/\\*|\\*(?!/)).*$",
+            "beforeText": "^[\\t ]* \\* {59}(?![\\t ])([^*]|\\*(?!/))*$",
+            "action": {
+                "indent": "none",
+                "appendText": "*                                                           "
+            }
+        },
+        {
+            "previousLineText": "^\\s*(/\\*|\\*(?!/)).*$",
+            "beforeText": "^[\\t ]* \\* {58}(?![\\t ])([^*]|\\*(?!/))*$",
+            "action": {
+                "indent": "none",
+                "appendText": "*                                                          "
+            }
+        },
+        {
+            "previousLineText": "^\\s*(/\\*|\\*(?!/)).*$",
+            "beforeText": "^[\\t ]* \\* {57}(?![\\t ])([^*]|\\*(?!/))*$",
+            "action": {
+                "indent": "none",
+                "appendText": "*                                                         "
+            }
+        },
+        {
+            "previousLineText": "^\\s*(/\\*|\\*(?!/)).*$",
+            "beforeText": "^[\\t ]* \\* {56}(?![\\t ])([^*]|\\*(?!/))*$",
+            "action": {
+                "indent": "none",
+                "appendText": "*                                                        "
+            }
+        },
+        {
+            "previousLineText": "^\\s*(/\\*|\\*(?!/)).*$",
+            "beforeText": "^[\\t ]* \\* {55}(?![\\t ])([^*]|\\*(?!/))*$",
+            "action": {
+                "indent": "none",
+                "appendText": "*                                                       "
+            }
+        },
+        {
+            "previousLineText": "^\\s*(/\\*|\\*(?!/)).*$",
+            "beforeText": "^[\\t ]* \\* {54}(?![\\t ])([^*]|\\*(?!/))*$",
+            "action": {
+                "indent": "none",
+                "appendText": "*                                                      "
+            }
+        },
+        {
+            "previousLineText": "^\\s*(/\\*|\\*(?!/)).*$",
+            "beforeText": "^[\\t ]* \\* {53}(?![\\t ])([^*]|\\*(?!/))*$",
+            "action": {
+                "indent": "none",
+                "appendText": "*                                                     "
+            }
+        },
+        {
+            "previousLineText": "^\\s*(/\\*|\\*(?!/)).*$",
+            "beforeText": "^[\\t ]* \\* {52}(?![\\t ])([^*]|\\*(?!/))*$",
+            "action": {
+                "indent": "none",
+                "appendText": "*                                                    "
+            }
+        },
+        {
+            "previousLineText": "^\\s*(/\\*|\\*(?!/)).*$",
+            "beforeText": "^[\\t ]* \\* {51}(?![\\t ])([^*]|\\*(?!/))*$",
+            "action": {
+                "indent": "none",
+                "appendText": "*                                                   "
+            }
+        },
+        {
+            "previousLineText": "^\\s*(/\\*|\\*(?!/)).*$",
+            "beforeText": "^[\\t ]* \\* {50}(?![\\t ])([^*]|\\*(?!/))*$",
+            "action": {
+                "indent": "none",
+                "appendText": "*                                                  "
+            }
+        },
+        {
+            "previousLineText": "^\\s*(/\\*|\\*(?!/)).*$",
+            "beforeText": "^[\\t ]* \\* {49}(?![\\t ])([^*]|\\*(?!/))*$",
+            "action": {
+                "indent": "none",
+                "appendText": "*                                                 "
+            }
+        },
+        {
+            "previousLineText": "^\\s*(/\\*|\\*(?!/)).*$",
+            "beforeText": "^[\\t ]* \\* {48}(?![\\t ])([^*]|\\*(?!/))*$",
+            "action": {
+                "indent": "none",
+                "appendText": "*                                                "
+            }
+        },
+        {
+            "previousLineText": "^\\s*(/\\*|\\*(?!/)).*$",
+            "beforeText": "^[\\t ]* \\* {47}(?![\\t ])([^*]|\\*(?!/))*$",
+            "action": {
+                "indent": "none",
+                "appendText": "*                                               "
+            }
+        },
+        {
+            "previousLineText": "^\\s*(/\\*|\\*(?!/)).*$",
+            "beforeText": "^[\\t ]* \\* {46}(?![\\t ])([^*]|\\*(?!/))*$",
+            "action": {
+                "indent": "none",
+                "appendText": "*                                              "
+            }
+        },
+        {
+            "previousLineText": "^\\s*(/\\*|\\*(?!/)).*$",
+            "beforeText": "^[\\t ]* \\* {45}(?![\\t ])([^*]|\\*(?!/))*$",
+            "action": {
+                "indent": "none",
+                "appendText": "*                                             "
+            }
+        },
+        {
+            "previousLineText": "^\\s*(/\\*|\\*(?!/)).*$",
+            "beforeText": "^[\\t ]* \\* {44}(?![\\t ])([^*]|\\*(?!/))*$",
+            "action": {
+                "indent": "none",
+                "appendText": "*                                            "
+            }
+        },
+        {
+            "previousLineText": "^\\s*(/\\*|\\*(?!/)).*$",
+            "beforeText": "^[\\t ]* \\* {43}(?![\\t ])([^*]|\\*(?!/))*$",
+            "action": {
+                "indent": "none",
+                "appendText": "*                                           "
+            }
+        },
+        {
+            "previousLineText": "^\\s*(/\\*|\\*(?!/)).*$",
+            "beforeText": "^[\\t ]* \\* {42}(?![\\t ])([^*]|\\*(?!/))*$",
+            "action": {
+                "indent": "none",
+                "appendText": "*                                          "
+            }
+        },
+        {
+            "previousLineText": "^\\s*(/\\*|\\*(?!/)).*$",
+            "beforeText": "^[\\t ]* \\* {41}(?![\\t ])([^*]|\\*(?!/))*$",
+            "action": {
+                "indent": "none",
+                "appendText": "*                                         "
+            }
+        },
+        {
+            "previousLineText": "^\\s*(/\\*|\\*(?!/)).*$",
+            "beforeText": "^[\\t ]* \\* {40}(?![\\t ])([^*]|\\*(?!/))*$",
+            "action": {
+                "indent": "none",
+                "appendText": "*                                        "
+            }
+        },
+        {
+            "previousLineText": "^\\s*(/\\*|\\*(?!/)).*$",
+            "beforeText": "^[\\t ]* \\* {39}(?![\\t ])([^*]|\\*(?!/))*$",
+            "action": {
+                "indent": "none",
+                "appendText": "*                                       "
+            }
+        },
+        {
+            "previousLineText": "^\\s*(/\\*|\\*(?!/)).*$",
+            "beforeText": "^[\\t ]* \\* {38}(?![\\t ])([^*]|\\*(?!/))*$",
+            "action": {
+                "indent": "none",
+                "appendText": "*                                      "
+            }
+        },
+        {
+            "previousLineText": "^\\s*(/\\*|\\*(?!/)).*$",
+            "beforeText": "^[\\t ]* \\* {37}(?![\\t ])([^*]|\\*(?!/))*$",
+            "action": {
+                "indent": "none",
+                "appendText": "*                                     "
+            }
+        },
+        {
+            "previousLineText": "^\\s*(/\\*|\\*(?!/)).*$",
+            "beforeText": "^[\\t ]* \\* {36}(?![\\t ])([^*]|\\*(?!/))*$",
+            "action": {
+                "indent": "none",
+                "appendText": "*                                    "
+            }
+        },
+        {
+            "previousLineText": "^\\s*(/\\*|\\*(?!/)).*$",
+            "beforeText": "^[\\t ]* \\* {35}(?![\\t ])([^*]|\\*(?!/))*$",
+            "action": {
+                "indent": "none",
+                "appendText": "*                                   "
+            }
+        },
+        {
+            "previousLineText": "^\\s*(/\\*|\\*(?!/)).*$",
+            "beforeText": "^[\\t ]* \\* {34}(?![\\t ])([^*]|\\*(?!/))*$",
+            "action": {
+                "indent": "none",
+                "appendText": "*                                  "
+            }
+        },
+        {
+            "previousLineText": "^\\s*(/\\*|\\*(?!/)).*$",
+            "beforeText": "^[\\t ]* \\* {33}(?![\\t ])([^*]|\\*(?!/))*$",
+            "action": {
+                "indent": "none",
+                "appendText": "*                                 "
+            }
+        },
+        {
+            "previousLineText": "^\\s*(/\\*|\\*(?!/)).*$",
+            "beforeText": "^[\\t ]* \\* {32}(?![\\t ])([^*]|\\*(?!/))*$",
+            "action": {
+                "indent": "none",
+                "appendText": "*                                "
+            }
+        },
+        {
+            "previousLineText": "^\\s*(/\\*|\\*(?!/)).*$",
+            "beforeText": "^[\\t ]* \\* {31}(?![\\t ])([^*]|\\*(?!/))*$",
+            "action": {
+                "indent": "none",
+                "appendText": "*                               "
+            }
+        },
+        {
+            "previousLineText": "^\\s*(/\\*|\\*(?!/)).*$",
+            "beforeText": "^[\\t ]* \\* {30}(?![\\t ])([^*]|\\*(?!/))*$",
+            "action": {
+                "indent": "none",
+                "appendText": "*                              "
+            }
+        },
+        {
+            "previousLineText": "^\\s*(/\\*|\\*(?!/)).*$",
+            "beforeText": "^[\\t ]* \\* {29}(?![\\t ])([^*]|\\*(?!/))*$",
+            "action": {
+                "indent": "none",
+                "appendText": "*                             "
+            }
+        },
+        {
+            "previousLineText": "^\\s*(/\\*|\\*(?!/)).*$",
+            "beforeText": "^[\\t ]* \\* {28}(?![\\t ])([^*]|\\*(?!/))*$",
+            "action": {
+                "indent": "none",
+                "appendText": "*                            "
+            }
+        },
+        {
+            "previousLineText": "^\\s*(/\\*|\\*(?!/)).*$",
+            "beforeText": "^[\\t ]* \\* {27}(?![\\t ])([^*]|\\*(?!/))*$",
+            "action": {
+                "indent": "none",
+                "appendText": "*                           "
+            }
+        },
+        {
+            "previousLineText": "^\\s*(/\\*|\\*(?!/)).*$",
+            "beforeText": "^[\\t ]* \\* {26}(?![\\t ])([^*]|\\*(?!/))*$",
+            "action": {
+                "indent": "none",
+                "appendText": "*                          "
+            }
+        },
+        {
+            "previousLineText": "^\\s*(/\\*|\\*(?!/)).*$",
+            "beforeText": "^[\\t ]* \\* {25}(?![\\t ])([^*]|\\*(?!/))*$",
+            "action": {
+                "indent": "none",
+                "appendText": "*                         "
+            }
+        },
+        {
+            "previousLineText": "^\\s*(/\\*|\\*(?!/)).*$",
+            "beforeText": "^[\\t ]* \\* {24}(?![\\t ])([^*]|\\*(?!/))*$",
+            "action": {
+                "indent": "none",
+                "appendText": "*                        "
+            }
+        },
+        {
+            "previousLineText": "^\\s*(/\\*|\\*(?!/)).*$",
+            "beforeText": "^[\\t ]* \\* {23}(?![\\t ])([^*]|\\*(?!/))*$",
+            "action": {
+                "indent": "none",
+                "appendText": "*                       "
+            }
+        },
+        {
+            "previousLineText": "^\\s*(/\\*|\\*(?!/)).*$",
+            "beforeText": "^[\\t ]* \\* {22}(?![\\t ])([^*]|\\*(?!/))*$",
+            "action": {
+                "indent": "none",
+                "appendText": "*                      "
+            }
+        },
+        {
+            "previousLineText": "^\\s*(/\\*|\\*(?!/)).*$",
+            "beforeText": "^[\\t ]* \\* {21}(?![\\t ])([^*]|\\*(?!/))*$",
+            "action": {
+                "indent": "none",
+                "appendText": "*                     "
+            }
+        },
+        {
+            "previousLineText": "^\\s*(/\\*|\\*(?!/)).*$",
+            "beforeText": "^[\\t ]* \\* {20}(?![\\t ])([^*]|\\*(?!/))*$",
+            "action": {
+                "indent": "none",
+                "appendText": "*                    "
+            }
+        },
+        {
+            "previousLineText": "^\\s*(/\\*|\\*(?!/)).*$",
+            "beforeText": "^[\\t ]* \\* {19}(?![\\t ])([^*]|\\*(?!/))*$",
+            "action": {
+                "indent": "none",
+                "appendText": "*                   "
+            }
+        },
+        {
+            "previousLineText": "^\\s*(/\\*|\\*(?!/)).*$",
+            "beforeText": "^[\\t ]* \\* {18}(?![\\t ])([^*]|\\*(?!/))*$",
+            "action": {
+                "indent": "none",
+                "appendText": "*                  "
+            }
+        },
+        {
+            "previousLineText": "^\\s*(/\\*|\\*(?!/)).*$",
+            "beforeText": "^[\\t ]* \\* {17}(?![\\t ])([^*]|\\*(?!/))*$",
+            "action": {
+                "indent": "none",
+                "appendText": "*                 "
+            }
+        },
+        {
+            "previousLineText": "^\\s*(/\\*|\\*(?!/)).*$",
+            "beforeText": "^[\\t ]* \\* {16}(?![\\t ])([^*]|\\*(?!/))*$",
+            "action": {
+                "indent": "none",
+                "appendText": "*                "
+            }
+        },
+        {
+            "previousLineText": "^\\s*(/\\*|\\*(?!/)).*$",
+            "beforeText": "^[\\t ]* \\* {15}(?![\\t ])([^*]|\\*(?!/))*$",
+            "action": {
+                "indent": "none",
+                "appendText": "*               "
+            }
+        },
+        {
+            "previousLineText": "^\\s*(/\\*|\\*(?!/)).*$",
+            "beforeText": "^[\\t ]* \\* {14}(?![\\t ])([^*]|\\*(?!/))*$",
+            "action": {
+                "indent": "none",
+                "appendText": "*              "
+            }
+        },
+        {
+            "previousLineText": "^\\s*(/\\*|\\*(?!/)).*$",
+            "beforeText": "^[\\t ]* \\* {13}(?![\\t ])([^*]|\\*(?!/))*$",
+            "action": {
+                "indent": "none",
+                "appendText": "*             "
+            }
+        },
+        {
+            "previousLineText": "^\\s*(/\\*|\\*(?!/)).*$",
+            "beforeText": "^[\\t ]* \\* {12}(?![\\t ])([^*]|\\*(?!/))*$",
+            "action": {
+                "indent": "none",
+                "appendText": "*            "
+            }
+        },
+        {
+            "previousLineText": "^\\s*(/\\*|\\*(?!/)).*$",
+            "beforeText": "^[\\t ]* \\* {11}(?![\\t ])([^*]|\\*(?!/))*$",
+            "action": {
+                "indent": "none",
+                "appendText": "*           "
+            }
+        },
+        {
+            "previousLineText": "^\\s*(/\\*|\\*(?!/)).*$",
+            "beforeText": "^[\\t ]* \\* {10}(?![\\t ])([^*]|\\*(?!/))*$",
+            "action": {
+                "indent": "none",
+                "appendText": "*          "
+            }
+        },
+        {
+            "previousLineText": "^\\s*(/\\*|\\*(?!/)).*$",
+            "beforeText": "^[\\t ]* \\* {9}(?![\\t ])([^*]|\\*(?!/))*$",
+            "action": {
+                "indent": "none",
+                "appendText": "*         "
+            }
+        },
+        {
+            "previousLineText": "^\\s*(/\\*|\\*(?!/)).*$",
+            "beforeText": "^[\\t ]* \\* {8}(?![\\t ])([^*]|\\*(?!/))*$",
+            "action": {
+                "indent": "none",
+                "appendText": "*        "
+            }
+        },
+        {
+            "previousLineText": "^\\s*(/\\*|\\*(?!/)).*$",
+            "beforeText": "^[\\t ]* \\* {7}(?![\\t ])([^*]|\\*(?!/))*$",
+            "action": {
+                "indent": "none",
+                "appendText": "*       "
+            }
+        },
+        {
+            "previousLineText": "^\\s*(/\\*|\\*(?!/)).*$",
+            "beforeText": "^[\\t ]* \\* {6}(?![\\t ])([^*]|\\*(?!/))*$",
+            "action": {
+                "indent": "none",
+                "appendText": "*      "
+            }
+        },
+        {
+            "previousLineText": "^\\s*(/\\*|\\*(?!/)).*$",
+            "beforeText": "^[\\t ]* \\* {5}(?![\\t ])([^*]|\\*(?!/))*$",
+            "action": {
+                "indent": "none",
+                "appendText": "*     "
+            }
+        },
+        {
+            "previousLineText": "^\\s*(/\\*|\\*(?!/)).*$",
+            "beforeText": "^[\\t ]* \\* {4}(?![\\t ])([^*]|\\*(?!/))*$",
+            "action": {
+                "indent": "none",
+                "appendText": "*    "
+            }
+        },
+        {
+            "previousLineText": "^\\s*(/\\*|\\*(?!/)).*$",
+            "beforeText": "^[\\t ]* \\* {3}(?![\\t ])([^*]|\\*(?!/))*$",
+            "action": {
+                "indent": "none",
+                "appendText": "*   "
+            }
+        },
+        {
+            "previousLineText": "^\\s*(/\\*|\\*(?!/)).*$",
+            "beforeText": "^[\\t ]* \\* {2}(?![\\t ])([^*]|\\*(?!/))*$",
+            "action": {
+                "indent": "none",
+                "appendText": "*  "
+            }
+        },
+        {
+            "previousLineText": "^\\s*(/\\*|\\*(?!/)).*$",
+            "beforeText": "^(\\t|[ ])* \\*( ([^*]|\\*(?!/))*)?$",
+            "action": {
+                "indent": "none",
+                "appendText": "* "
+            }
+        },
+        {
+            "beforeText": "^(\\t|[ ])* \\*/\\s*$",
+            "action": {
+                "indent": "none",
+                "removeText": 1
+            }
+        },
+        {
+            "beforeText": "^(\\t|[ ])* \\*[^/]*\\*/\\s*$",
+            "action": {
+                "indent": "none",
+                "removeText": 1
+            }
+        },
+        {
+            "previousLineText": "^\\s*(((else ?)?if|for|while)\\s*\\(.*\\)\\s*|else\\s*)$",
+            "beforeText": "^\\s+([^{i\\s]|i(?!f\\b))",
+            "action": {
+                "indent": "outdent"
+            }
+        },
+        {
+            "beforeText": "^\\s*//\\s*\\S|\\s//\\s+\\S",
+            "afterText": "^(?!\\s*$)",
+            "action": {
+                "indent": "none",
+                "appendText": "// "
+            }
+        }
+    ]
+}

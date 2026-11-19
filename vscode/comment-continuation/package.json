@@ -1,0 +1,16 @@
+{
+    "name": "c-comment-continuation",
+    "displayName": "C Comment Continuation (Local)",
+    "description": "Continue C and C++ block comments independently of the language server.",
+    "version": "0.1.0",
+    "publisher": "emilio-local",
+    "engines": { "vscode": "^1.80.0" },
+    "categories": ["Programming Languages"],
+    "contributes": {
+        "languages": [
+            { "id": "c", "configuration": "./language-configuration.json" },
+            { "id": "cpp", "configuration": "./language-configuration.json" },
+            { "id": "cuda-cpp", "configuration": "./language-configuration.json" }
+        ]
+    }
+}

@@ -24,7 +24,7 @@
     "vim.searchMatchTextColor": "#0E0E0E",
     // completeopt=menuone,noinsert,noselect; Enter on an unselected menu = newline
     "editor.suggest.selectionMode": "never",
-    "editor.acceptSuggestionOnEnter": "off",
+    "editor.acceptSuggestionOnEnter": "on",
     "editor.tabCompletion": "off",
     // auto-pairs: skip/delete any closer, not only VS Code-inserted ones
     "editor.autoClosingOvertype": "always",
